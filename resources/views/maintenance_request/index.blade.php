@@ -267,42 +267,42 @@
                     };
 
                    // Convert arrival time to readable format
-let arrivalTimeFormatted = '-';
-if (data.arrival_time) {
-    const dateObj = new Date(data.arrival_time);
-    const year = dateObj.getFullYear();
-    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-    const day = String(dateObj.getDate()).padStart(2, '0');
-    const time = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
-    arrivalTimeFormatted = `${year}-${month}-${day} ${time}`;
-}
+                        let arrivalTimeFormatted = '-';
+                        if (data.arrival_time) {
+                            const dateObj = new Date(data.arrival_time);
+                            const year = dateObj.getFullYear();
+                            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                            const day = String(dateObj.getDate()).padStart(2, '0');
+                            const time = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+                            arrivalTimeFormatted = `${year}-${month}-${day} ${time}`;
+                        }
 
-let html = `
-    <div class="mb-2">
-        <p class="mb-1"><strong>${translations.property}:</strong> ${data.property ?? '-'}</p>
-        <p class="mb-1"><strong>${translations.unit}:</strong> ${data.unit ?? '-'}</p>
-        <p class="mb-1"><strong>${translations.maintainer}:</strong> ${data.maintainer ?? '-'}</p>
-        <p class="mb-1"><strong>${translations.arrival_time}:</strong> ${arrivalTimeFormatted}</p>
-        <p class="mb-1"><strong>${translations.number_of_people}:</strong> ${peopleCount}</p>
-        <p class="mb-1"><strong>${translations.status}:</strong> 
-            <span class="badge ${statusBadges[data.status] ?? 'bg-secondary'}">
-                ${(data.status ?? '-').toString().replace(/_/g, ' ')}
-            </span>
-        </p>
-        <p class="mb-1"><strong>${translations.attachment}:</strong> ${attachment}</p>
-    </div>
+                        let html = `
+                            <div class="mb-2">
+                                <p class="mb-1"><strong>${translations.property}:</strong> ${data.property ?? '-'}</p>
+                                <p class="mb-1"><strong>${translations.unit}:</strong> ${data.unit ?? '-'}</p>
+                                <p class="mb-1"><strong>${translations.maintainer}:</strong> ${data.maintainer ?? '-'}</p>
+                                <p class="mb-1"><strong>${translations.arrival_time}:</strong> ${arrivalTimeFormatted}</p>
+                                <p class="mb-1"><strong>${translations.number_of_people}:</strong> ${peopleCount}</p>
+                                <p class="mb-1"><strong>${translations.status}:</strong> 
+                                    <span class="badge ${statusBadges[data.status] ?? 'bg-secondary'}">
+                                        ${(data.status ?? '-').toString().replace(/_/g, ' ')}
+                                    </span>
+                                </p>
+                                <p class="mb-1"><strong>${translations.attachment}:</strong> ${attachment}</p>
+                            </div>
 
-    <div class="d-flex flex-wrap gap-2 mt-3 align-items-center" style="gap:8px;flex-wrap:wrap;">
-        <!-- View Button -->
-        <a href="#"
-            class="btn btn-warning btn-sm customModal"
-            data-size="lg"
-            data-title="${translations.view_maintenance}"
-            data-url="${data.show_url}"
-            style="display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:0.45rem 1rem;font-size:0.85rem;font-weight:500;line-height:1.2;border-radius:6px;transition:all 0.2s ease-in-out;">
-            <i class="ti ti-eye me-1" style="font-size:1rem;"></i> ${translations.view_maintenance}
-        </a>
-`;
+                            <div class="d-flex flex-wrap gap-2 mt-3 align-items-center" style="gap:8px;flex-wrap:wrap;">
+                                <!-- View Button -->
+                                <a href="#"
+                                    class="btn btn-warning btn-sm customModal"
+                                    data-size="lg"
+                                    data-title="${translations.view_maintenance}"
+                                    data-url="${data.show_url}"
+                                    style="display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:0.45rem 1rem;font-size:0.85rem;font-weight:500;line-height:1.2;border-radius:6px;transition:all 0.2s ease-in-out;">
+                                    <i class="ti ti-eye me-1" style="font-size:1rem;"></i> ${translations.view_maintenance}
+                                </a>
+                        `;
 
 
                     @if (Auth::user()->type !== 'maintainer')
