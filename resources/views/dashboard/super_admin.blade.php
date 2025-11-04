@@ -126,11 +126,11 @@
                         </div>
                         <div class="row mt-3">
                             <div class="col-12 text-end">
-                                <a href="${data.show_url}" class="btn btn-info btn-sm">
+                                <a href="#" class="btn btn-info btn-sm customModal" data-size="lg" data-title="{{ __('Maintenance Request Details') }}" data-url="${data.show_url}">
                                     <i class="ti ti-eye"></i> {{ __("View Details") }}
                                 </a>
                                 @can('edit maintenance request')
-                                <a href="${data.edit_url}" class="btn btn-primary btn-sm">
+                                <a href="#" class="btn btn-primary btn-sm customModal" data-size="lg" data-title="{{ __('Edit Maintenance Request') }}" data-url="${data.edit_url}">
                                     <i class="ti ti-pencil"></i> {{ __("Edit") }}
                                 </a>
                                 @endcan
@@ -250,7 +250,7 @@
             <div class="card">
                 <div class="card-header">
                     <h5 class="mb-0">
-                        <i class="ti ti-calendar"></i> {{ __('Maintenance Calendar') }}
+                        <i class="ti ti-calendar"></i> {{ __('Service (Today)') }}
                     </h5>
                 </div>
                 <div class="card-body">
