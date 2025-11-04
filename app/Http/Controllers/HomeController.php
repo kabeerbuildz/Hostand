@@ -20,8 +20,8 @@ use App\Models\User;
 use App\Models\FAQ;
 use App\Models\Page;
 use App\Models\HomePage;
-
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class HomeController extends Controller
 {
@@ -43,38 +43,115 @@ class HomeController extends Controller
                 $result['openTickets'] = Support::where('status', 'open')->count();
 
                 // Prepare events for FullCalendar (services for today)
-                $todayRequests = MaintenanceRequest::with(['types', 'properties', 'units', 'maintainers'])
-                    ->whereDate('request_date', date('Y-m-d'))
-                    ->get();
+                // Get maintenance requests
+                $maintenanceRequests = MaintenanceRequest::with([
+                    'properties' => function($query) {
+                        $query->with(['propertyImages', 'totalUnits']);
+                    },
+                    'units',
+                    'types',
+                    'maintainers'
+                ])
+                ->orderBy('request_date', 'desc')
+                ->get();
 
-                $servicesForTheDay = [];
-                foreach ($todayRequests as $r) {
-                    $titleParts = [];
-                    if (!empty($r->types->name)) {
-                        $titleParts[] = $r->types->name;
+                // Add owner information to each request
+                $maintenanceRequests->each(function ($request) {
+                    if ($request->properties) {
+                        $request->properties->owner = User::find($request->properties->parent_id);
                     }
-                    if (!empty($r->properties->name)) {
-                        $titleParts[] = $r->properties->name;
-                    }
-                    if (!empty($r->units->name)) {
-                        $titleParts[] = $r->units->name;
-                    }
-                    $title = implode(' - ', $titleParts) ?: __('Service');
+                });
 
-                    // If arrival_time supplied, include it to form a datetime
-                    $start = $r->request_date;
-                    if (!empty($r->arrival_time)) {
-                        // normalize arrival_time to HH:MM if possible
-                        $start = $r->request_date . 'T' . substr($r->arrival_time, 0, 5);
-                    }
+                // Debug maintenance requests
+                \Log::info('Maintenance Requests:', ['count' => $maintenanceRequests->count()]);
 
-                    $servicesForTheDay[] = [
-                        'title' => $title,
-                        'start' => $start,
-                        'id' => $r->id,
-                        'maintainer' => $r->maintainers->name ?? null,
+                // Format events for FullCalendar with proper date handling
+                $events = $maintenanceRequests->map(function ($request) {
+                    $statusColors = [
+                        'pending'     => '#ffc107',
+                        'in_progress' => '#17a2b8',
+                        'completed'   => '#28a745',
                     ];
-                }
+
+                    // Build start datetime
+                    $startDate = Carbon::parse($request->request_date);
+                    if ($request->arrival_time) {
+                        $startDateTime = $startDate->format('Y-m-d') . ' ' . $request->arrival_time;
+                    } else {
+                        $startDateTime = $startDate->format('Y-m-d');
+                    }
+
+                    // Build title with time if available
+                    $title = __($request->types->title ?? 'No Issue');
+                    if ($request->arrival_time) {
+                        $title .= ' (' . Carbon::parse($request->arrival_time)->format('h:i A') . ')';
+                    }
+
+                    $event = [
+                        'id'             => $request->id,
+                        'title'          => $title,
+                        'start'          => $startDateTime,
+                        'className'      => 'status-' . $request->status,
+                        'backgroundColor'=> $statusColors[$request->status] ?? '#6c757d',
+                        'borderColor'    => $statusColors[$request->status] ?? '#6c757d',
+                        'textColor'      => '#ffffff',
+                        'extendedProps'  => [
+                            'property'   => __($request->properties->name ?? '-'),
+                            'unit'       => __($request->units->name ?? '-'),
+                            'maintainer' => __($request->maintainers->name ?? '-'),
+                            'status'     => __($request->status),
+                            'attachment' => $request->issue_attachment,
+                            'description'=> $request->description,
+                            'owner'      => $request->properties->owner->name ?? 'Unknown',
+                            'show_url'   => route('maintenance-request.show', $request->id),
+                            'edit_url'   => route('maintenance-request.edit', $request->id),
+                            'delete_url' => route('maintenance-request.destroy', $request->id),
+                            'status_url' => route('maintenance-request.action', $request->id),
+                        ]
+                    ];
+
+                    // Debug each event
+                    \Log::info('Calendar Event:', $event);
+
+                    return $event;
+                })->toArray();
+
+                // Format events for FullCalendar
+                $events = $maintenanceRequests->map(function ($request) {
+                    $statusColors = [
+                        'pending'     => '#ffc107',
+                        'in_progress' => '#17a2b8',
+                        'completed'   => '#28a745',
+                    ];
+
+                    $title = __($request->types->title ?? 'No Issue');
+                    if (!empty($request->arrival_time)) {
+                        $title .= ' (' . \Carbon\Carbon::parse($request->arrival_time)->format('h:i A') . ')';
+                    }
+
+                    return [
+                        'id'             => $request->id,
+                        'title'          => $title,
+                        'start'          => $request->arrival_time,
+                        'className'      => 'status-' . $request->status,
+                        'backgroundColor'=> $statusColors[$request->status] ?? '#6c757d',
+                        'borderColor'    => $statusColors[$request->status] ?? '#6c757d',
+                        'textColor'      => '#ffffff',
+                        'extendedProps'  => [
+                            'property'   => __($request->properties->name ?? '-'),
+                            'unit'       => __($request->units->name ?? '-'),
+                            'maintainer' => __($request->maintainers->name ?? '-'),
+                            'status'     => __($request->status),
+                            'attachment' => $request->issue_attachment,
+                            'description'=> $request->description,
+                            'owner'      => $request->properties->owner->name ?? 'Unknown',
+                            'show_url'   => route('maintenance-request.show', $request->id),
+                            'edit_url'   => route('maintenance-request.edit', $request->id),
+                            'delete_url' => route('maintenance-request.destroy', $request->id),
+                            'status_url' => route('maintenance-request.action', $request->id),
+                        ]
+                    ];
+                })->toArray();
 
                 // Notes for today (widget / shortcut)
                 $notes = NoticeBoard::whereDate('created_at', date('Y-m-d'))->where('parent_id', parentId())->get();
@@ -83,7 +160,7 @@ class HomeController extends Controller
 
                 $result['organizationByMonth'] = $this->organizationByMonth();
                 $result['paymentByMonth'] = $this->paymentByMonth();
-                return view('dashboard.super_admin', compact('result', 'servicesForTheDay', 'notes', 'notesWidgetAvailable'));
+                return view('dashboard.super_admin', compact('result', 'events', 'notes', 'notesWidgetAvailable'));
             } else {
                 $result['totalNote'] = NoticeBoard::where('parent_id', parentId())->count();
                 $result['totalContact'] = Contact::where('parent_id', parentId())->count();

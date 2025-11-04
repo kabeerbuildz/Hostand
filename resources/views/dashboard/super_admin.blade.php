@@ -9,21 +9,151 @@
 @endsection
 
 @push('script-page')
-    {{-- Calendar script (FullCalendar Example) --}}
-    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css' rel='stylesheet' />
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+    {{-- Required Libraries --}}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css' rel='stylesheet' />
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/locales/it.global.min.js'></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        .status-pending {
+            background-color: #ffc107 !important;
+            border-color: #ffc107 !important;
+            color: #fff !important;
+        }
+        .status-in_progress {
+            background-color: #17a2b8 !important;
+            border-color: #17a2b8 !important;
+            color: #fff !important;
+        }
+        .status-completed {
+            background-color: #28a745 !important;
+            border-color: #28a745 !important;
+            color: #fff !important;
+        }
+        /* Modern block-style events for timeGrid views */
+        .fc .fc-timegrid-event {
+            border-radius: 6px;
+            padding: 2px 6px;
+            font-size: 0.85rem;
+            line-height: 1.2;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        /* Month view events */
+        .fc .fc-daygrid-event {
+            border-radius: 6px;
+            font-size: 0.85rem;
+            padding: 2px 4px;
+        }
+        /* Text truncation if too long */
+        .fc .fc-event-title {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Debug: Check what events data we're receiving
             var calendarEl = document.getElementById('service_calendar');
+            var events = @json($events);
+            console.log('Calendar Events:', events);
+            
             var calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridDay',
-                height: 550,
+                initialView: 'dayGridMonth',
+                height: 'auto',
                 headerToolbar: {
                     left: 'prev,next today',
                     center: 'title',
-                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                    right: 'timeGridDay'
                 },
-                events: @json($servicesForTheDay ?? []), // Example: pass events from controller
+                locale: 'it',
+                initialView: 'timeGridDay',
+                buttonText: {
+                    today: '{{ __("Today") }}',
+                    day: '{{ __("Day") }}'
+                },
+                allDayText: '{{ __("All Day") }}',
+                events: @json($events),
+                
+                // Professional stacking for week/day views
+                slotEventOverlap: false,
+                eventOverlap: false,
+                eventDisplay: 'block',
+                
+                // Reduce padding for dense schedule
+                eventMinHeight: 24,
+                eventMaxStack: 999,
+                
+                eventClick: function(info) {
+                    const data = info.event.extendedProps;
+                    
+                    const statusBadges = {
+                        'pending': 'bg-warning',
+                        'in_progress': 'bg-info',
+                        'completed': 'bg-success',
+                    };
+
+                    const modalContent = `
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-primary mb-3"><i class="ti ti-building"></i> {{ __("Property Details") }}</h6>
+                                <div class="mb-3">
+                                    <strong>{{ __("Property") }}:</strong> ${data.property}
+                                </div>
+                                <div class="mb-3">
+                                    <strong>{{ __("Unit") }}:</strong> ${data.unit}
+                                </div>
+                                <div class="mb-3">
+                                    <strong>{{ __("Owner") }}:</strong> ${data.owner}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-info mb-3"><i class="ti ti-tools"></i> {{ __("Service Details") }}</h6>
+                                <div class="mb-3">
+                                    <strong>{{ __("Maintainer") }}:</strong> ${data.maintainer}
+                                </div>
+                                <div class="mb-3">
+                                    <strong>{{ __("Status") }}:</strong> 
+                                    <span class="badge ${statusBadges[data.status] ?? 'bg-secondary'}">
+                                        ${data.status.replace('_', ' ').toUpperCase()}
+                                    </span>
+                                </div>
+                                <div class="mb-3">
+                                    <strong>{{ __("Date") }}:</strong> ${info.event.startStr}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12 text-end">
+                                <a href="${data.show_url}" class="btn btn-info btn-sm">
+                                    <i class="ti ti-eye"></i> {{ __("View Details") }}
+                                </a>
+                                @can('edit maintenance request')
+                                <a href="${data.edit_url}" class="btn btn-primary btn-sm">
+                                    <i class="ti ti-pencil"></i> {{ __("Edit") }}
+                                </a>
+                                @endcan
+                            </div>
+                        </div>
+                    `;
+
+                    // Update modal content
+                    $('#eventTitle').html(info.event.title);
+                    $('#eventBody').html(modalContent);
+                    
+                    // Show modal
+                    $('#eventModal').modal('show');
+                },
+
+                // Add tooltips to events
+                eventDidMount: function(info) {
+                    $(info.el).tooltip({
+                        title: info.event.title + ' - ' + info.event.extendedProps.property,
+                        placement: 'top',
+                        trigger: 'hover'
+                    });
+                }
             });
             calendar.render();
         });
@@ -114,20 +244,37 @@
         </div>
     </div>
 
-    {{-- CALENDAR --}}
+    {{-- CALENDAR SECTION --}}
     <div class="row mt-4">
-        <div class="col-lg-8 col-md-12">
+        <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h5>{{ __('Service Calendar (Today)') }}</h5>
+                    <h5 class="mb-0">
+                        <i class="ti ti-calendar"></i> {{ __('Maintenance Calendar') }}
+                    </h5>
                 </div>
                 <div class="card-body">
-                    <div id="service_calendar"></div>
+                    <div id="service_calendar" style="min-height: 600px;"></div>
                 </div>
             </div>
         </div>
+    </div>
 
-        {{-- NOTES + CHAT --}}
+    <!-- Event Details Modal -->
+    <div class="modal fade" id="eventModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="eventTitle"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="eventBody">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- NOTES + CHAT --}}
         <div class="col-lg-4 col-md-12">
             <div class="card mb-3">
                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -163,5 +310,4 @@
             </div>
         </div>
     </div>
-  mmmmmm
 @endsection
