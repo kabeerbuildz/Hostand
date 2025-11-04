@@ -66,13 +66,13 @@
                                 {{ __('Property Units') }}
                             </a>
                         </li>
-                        <li class="nav-item">
+                        {{-- <li class="nav-item">
                             <a class="nav-link" id="profile-tab-3" data-bs-toggle="tab" href="#profile-3" role="tab"
                                 aria-selected="false">
                                 <i class="material-icons-two-tone me-2">vpn_key</i>
                                 {{ __('Access & Settings') }}
                             </a>
-                        </li>
+                        </li> --}}
                         <li class="nav-item">
                             <a class="nav-link" id="profile-tab-4" data-bs-toggle="tab" href="#profile-4" role="tab"
                                 aria-selected="false">
@@ -327,7 +327,7 @@
                         </div>
 
                         <!-- Access & Settings Tab -->
-                        <div class="tab-pane" id="profile-3" role="tabpanel" aria-labelledby="profile-tab-3">
+                        {{-- <div class="tab-pane" id="profile-3" role="tabpanel" aria-labelledby="profile-tab-3">
                             <div class="row">
                                 <div class="col-sm-12">
                                     <div class="card border">
@@ -336,8 +336,8 @@
                                         </div>
                                         <div class="card-body">
                                             <div class="row">
-                                                <!-- Access Codes Section -->
-                                                {{-- <div class="col-md-6">
+                                                
+                                                <div class="col-md-6">
                                                     <h6 class="text-primary mb-3">{{ __('Access Codes') }}</h6>
                                                     <div class="mb-3">
                                                         <label
@@ -363,9 +363,9 @@
                                                         <p class="text-muted">
                                                             {{ $property->access_other ?? __('Not specified') }}</p>
                                                     </div>
-                                                </div> --}}
+                                                </div>
 
-                                                <!-- Property Settings Section -->
+                                                
                                                 <div class="col-md-6">
                                                     <h6 class="text-primary mb-3">{{ __('Property Settings') }}</h6>
                                                     <div class="mb-3">
@@ -416,7 +416,7 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </div> --}}
 
                         <!-- Services & Requests Tab -->
                         <div class="tab-pane" id="profile-4" role="tabpanel" aria-labelledby="profile-tab-4">

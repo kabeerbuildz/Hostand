@@ -2,74 +2,112 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Maintainer;
-use App\Models\MaintenanceRequest;
-use App\Models\Notification;
-use App\Models\Property;
-use App\Models\Tenant;
 use App\Models\Type;
 use App\Models\User;
+use App\Models\Tenant;
+use App\Models\Property;
+use App\Models\Maintainer;
+use App\Models\Notification;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Models\MaintenanceRequest;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 
 class MaintenanceRequestController extends Controller
 {
 
-    public function index()
-    {
+public function index()
+{
+    if (\Auth::user()->can('manage maintenance request') || \Auth::user()->type == 'admin') {
 
-        
-        if (\Auth::user()->can('manage maintenance request') || \Auth::user()->type == 'admin') {
-            if (\Auth::user()->type == 'maintainer') {
-                $maintenanceRequests = MaintenanceRequest::where('maintainer_id', \Auth::user()->id)->get();
-            } elseif (\Auth::user()->type == 'tenant') {
-                $user = \Auth::user();
-                $tenant = $user->tenants;
-                $maintenanceRequests = MaintenanceRequest::where('property_id', !empty($tenant) ? $tenant->property : 0)
-                    ->where('unit_id', !empty($tenant) ? $tenant->unit : 0)
-                    ->get();
-            } else {
-                $maintenanceRequests = MaintenanceRequest::where('parent_id', parentId())->get();
+        // ✅ Fetch maintenance requests based on user type
+        if (\Auth::user()->type == 'maintainer') {
+            $maintenanceRequests = MaintenanceRequest::where('maintainer_id', \Auth::user()->id)->get();
+        } elseif (\Auth::user()->type == 'tenant') {
+            $user = \Auth::user();
+            $tenant = $user->tenants;
+            $maintenanceRequests = MaintenanceRequest::where('property_id', !empty($tenant) ? $tenant->property : 0)
+                ->where('unit_id', !empty($tenant) ? $tenant->unit : 0)
+                ->get();
+        } else {
+            $maintenanceRequests = MaintenanceRequest::where('parent_id', parentId())->get();
+        }
+
+        // ✅ Eager load relationships
+        $maintenanceRequests->load([
+            'properties' => function ($query) {
+                $query->with(['propertyImages', 'totalUnits']);
+            },
+            'units',
+            'types',
+            'maintainers'
+        ]);
+
+        // ✅ Build events array
+        $events = $maintenanceRequests->map(function ($request) {
+
+            // Try getting property via relationship first
+            $property = $request->properties;
+
+            // If not found, fetch manually using Eloquent
+            if (!$property && $request->property_id) {
+                $property = Property::where('id', $request->property_id)->first();
             }
 
-            // Load all relationships with property details
-            $maintenanceRequests->load([
-                'properties' => function($query) {
-                    $query->with(['propertyImages', 'totalUnits']);
-                },
-                'units',
-                'types',
-                'maintainers'
-            ]); // eager load relationships
+            // Try getting unit via relationship first
+            $unit = $request->units;
 
-            $events = $maintenanceRequests->map(function ($request) {
-                return [
-                    'id' => $request->id,
-                    'title' => $request->types->title ?? 'No Issue',
-                    'start' => $request->arrival_time,
-                    'extendedProps' => [
-                        'property' => $request->properties->name ?? '-',
-                        'unit' => $request->units->name ?? '-',
-                        'maintainer' => $request->maintainers->name ?? '-',
-                        'status' => $request->status,
-                        'attachment' => $request->issue_attachment,
-                        'people_count' => $request->people_count,
-                        'arrival_time' => $request->arrival_time,
-                        'show_url' => route('maintenance-request.show', $request->id),
-                        'edit_url' => route('maintenance-request.edit', $request->id),
-                        'delete_url' => route('maintenance-request.destroy', $request->id),
-                        'status_url' => route('maintenance-request.action', $request->id),
-                    ]
-                ];
-            });
+            // If not found, fetch manually
+            if (!$unit && $request->unit_id) {
+                $unit = \App\Models\PropertyUnit::where('id', $request->unit_id)->first();
+            }
 
-           return view('maintenance_request.index', compact('events'));
-        } else {
-            return redirect()->back()->with('error', __('Permission Denied!'));
-        }
+            // Extract readable names (fallback to defaults)
+            $propertyName = $property->name ?? 'Unknown Property';
+            $unitName = $unit->name ?? 'Unknown Unit';
+
+            // Optional: log for debugging (doesn't break the page)
+            \Log::info('MaintenanceRequest property/unit check', [
+                'maintenance_request_id' => $request->id,
+                'property_id' => $request->property_id,
+                'property_name' => $propertyName,
+                'unit_id' => $request->unit_id,
+                'unit_name' => $unitName
+            ]);
+
+            // ✅ Return event structure
+            return [
+                'id' => $request->id,
+                'title' => $request->types->title ?? 'No Issue',
+                'start' => $request->arrival_time,
+                'extendedProps' => [
+                    'property_id' => $request->property_id,
+                    'property_name' => $propertyName,
+                    'unit_id' => $request->unit_id,
+                    'unit_name' => $unitName,
+                    'maintainer' => $request->maintainers->name ?? '-',
+                    'status' => $request->status,
+                    'attachment' => $request->issue_attachment,
+                    'people_count' => $request->people_count,
+                    'arrival_time' => $request->arrival_time,
+                    'show_url' => route('maintenance-request.show', $request->id),
+                    'edit_url' => route('maintenance-request.edit', $request->id),
+                    'delete_url' => route('maintenance-request.destroy', $request->id),
+                    'status_url' => route('maintenance-request.action', $request->id),
+                ]
+            ];
+        });
+
+        // ✅ Pass to view
+        return view('maintenance_request.index', compact('events'));
+
+    } else {
+        return redirect()->back()->with('error', __('Permission Denied!'));
     }
+}
+
 
                                                         //   method of the maintaince modal
 public function create()

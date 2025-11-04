@@ -52,190 +52,7 @@ public function index()
             return redirect()->back()->with('error', __('Permission Denied!'));
         }
     }
-// public function store(Request $request)
-// {
-//     if (!\Auth::user()->can('create property')) {
-//         return redirect()->back()->with('error', __('Permission Denied!'));
-//     }
 
-//     // Custom validation
-//     $customMessages = [
-//         'access_description.required' => 'The access description field is required.',
-//         'sofa_beds.required_without'  => 'Provide sofa beds count or select yes/no for sofa bed.',
-//         'sofa_bed.required_without'   => 'Select yes/no for sofa bed or provide sofa beds count.',
-//     ];
-
-
-//     $validator = Validator::make(
-//     $request->all(),
-//     [
-//         'name'               => 'required',
-//         'description'        => 'required',
-//         // 'access_description' => 'required',
-//         'type'               => 'required',
-//         'property_type'      => 'required',
-//         'country'            => 'required',
-//         'state'              => 'required',
-//         'city'               => 'required',
-//         'zip_code'           => 'required',
-//         'address'            => 'required',
-//         'thumbnail'          => 'required',
-//         'name'           => 'required',
-//         // 'bedroom'            => 'required',
-//         // 'kitchen'            => 'required',
-//         // 'baths'              => 'required',
-//         // 'piano'              => 'required',/
-//         // FIXED RULES
-//         // sofa_bed belongs to properties table
-//         'sofa_bed'           => 'nullable|in:yes,no',
-//         // sofa_beds belongs to property_units table
-//         'sofa_beds'          => 'nullable|numeric',
-//     ],
-//         $customMessages
-//     );
-
-//     if ($validator->fails()) {
-//         return response()->json([
-//             'status' => 'error',
-//             'msg' => $validator->getMessageBag()->first(),
-//         ]);
-//     }
-
-//     // Property limit check
-//     $ids = parentId();
-//     $authUser = \App\Models\User::find($ids);
-//     $totalProperty = $authUser->totalProperty();
-//     $subscription = Subscription::find($authUser->subscription);
-//     if ($totalProperty >= $subscription->property_limit && $subscription->property_limit != 0) {
-//         return response()->json([
-//             'status' => 'error',
-//             'msg'    => __('Your property limit is over, please upgrade your subscription.'),
-//             'id'     => 0,
-//         ]);
-//     }
-
-//     // 🏠 Create property
-//     $property = new Property();
-//     $property->name            = $request->name;
-//     // $property->description     = $request->description;
-//     $property->type            = $request->type;
-//     $property->country         = $request->country;
-//     $property->state           = $request->state;
-//     $property->city            = $request->city;
-//     $property->zip_code        = $request->zip_code;
-//     $property->address         = $request->address;
-//     $property->location_type   = $request->property_type;
-//     $property->piano           = $request->piano ?? null;
-//     $property->staircase       = $request->staircase ?? null;
-//     $property->sign_detail     = $request->sign_detail ?? null;
-//     $property->opening_type    = $request->opening_type ?? null;
-//         $property->street_code        = $request->street_code ?? null;
-//     $property->door_code          = $request->door_code ?? null;
-//     $property->key_description    = $request->key_description ?? null;
-//     $property->bnb_unit_type   = $request->bnb_unit_type ?? null;
-//     $property->bnb_unit_count  = $request->bnb_unit_count ?? 0;
-//     $property->sofa_bed        = $request->input('sofa_bed', 'no');
-//     $property->parent_id       = parentId();
-//     $property->save();
-
-//     // Log property creation
-//     \Log::info('✅ Property created', ['property_id' => $property->id]);
-
-//     // 🖼️ Handle thumbnail
-//     if ($request->hasFile('thumbnail') && $request->file('thumbnail')->isValid()) {
-//             $thumbnail = $request->file('thumbnail');
-//             $thumbnailFileName = 'THUMBNAIL_' . microtime(true) . '_' . uniqid() . '.' . $thumbnail->getClientOriginalExtension();
-
-//             // Ensure directory exists
-//             $thumbnailDir = public_path('uploads/thumbnail');
-//             if (!file_exists($thumbnailDir)) {
-//                 mkdir($thumbnailDir, 0777, true);
-//             }
-
-//             if ($thumbnail->move($thumbnailDir, $thumbnailFileName)) {
-//                 $thumbnailRecord = new PropertyImage();
-//                 $thumbnailRecord->property_id = $property->id;
-//                 $thumbnailRecord->image = $thumbnailFileName;
-//                 $thumbnailRecord->type = 'thumbnail';
-//                 $thumbnailRecord->save();
-//             } else {
-//                 return response()->json([
-//                     'status' => 'error',
-//                     'msg'    => __('Failed to upload thumbnail.'),
-//                 ]);
-//             }
-//         }
-
-//         // Handle additional property images (property_images[] input)
-//         if ($request->hasFile('property_images')) {
-//             foreach ($request->file('property_images') as $file) {
-//                 if ($file && $file->isValid()) {
-//                     $propertyFileName = 'PROPERTY_IMG_' . microtime(true) . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-
-//                     $propertyDir = public_path('uploads/property');
-//                     if (!file_exists($propertyDir)) {
-//                         mkdir($propertyDir, 0777, true);
-//                     }
-
-//                     if ($file->move($propertyDir, $propertyFileName)) {
-//                         $propertyImage = new PropertyImage();
-//                         $propertyImage->property_id = $property->id;
-//                         $propertyImage->image = $propertyFileName;
-//                         $propertyImage->type = 'extra';
-//                         $propertyImage->save();
-//                     } else {
-//                         return response()->json([
-//                             'status' => 'error',
-//                             'msg'    => __('Failed to upload one or more property images.'),
-//                         ]);
-//                     }
-//                 }
-//             }
-//         }
-
-//     // 🧩 Handle MULTIPLE UNITS
-//     \Log::info('📦 Incoming request for units:', ['units' => $request->units ?? []]);
-
-//     if ($request->has('units') && is_array($request->units)) {
-//         foreach ($request->units as $unitData) {
-//             \Log::info('Preparing to save PropertyUnit', ['property_id' => $property->id, 'unit_data' => $unitData]);
-
-//             $unit = new PropertyUnit();
-//             $unit->name                = $unitData['unitname'] ?? 'Unnamed Unit';
-//             $unit->bedroom             = $unitData['bedroom'] ?? 0;
-//             $unit->double_beds         = $unitData['double_beds'] ?? 0;
-//             $unit->single_beds         = $unitData['single_beds'] ?? 0;
-//             $unit->sofa_beds           = intval($unitData['sofa_beds'] ?? 0);
-//             $unit->kitchen             = $unitData['kitchen'] ?? 'no';
-//             $unit->baths               = $unitData['baths'] ?? 0;
-//             $unit->rent                = $unitData['rent'] ?? 0;
-//             $unit->rent_type           = $unitData['rent_type'] ?? 0;
-//             $unit->access_description  = $unitData['access_description'] ?? null;
-//             $unit->deposit_type        = $unitData['deposit_type'] ?? null;
-//             $unit->deposit_amount      = $unitData['deposit_amount'] ?? 0;
-//             $unit->late_fee_type       = $unitData['late_fee_type'] ?? null;
-//             $unit->late_fee_amount     = $unitData['late_fee_amount'] ?? 0;
-//             $unit->incident_receipt_amount = $unitData['incident_receipt_amount'] ?? 0;
-//             $unit->notes               = $unitData['notes'] ?? null;
-//             $unit->property_id         = $property->id;
-//             $unit->parent_id           = parentId();
-//             $unit->save();
-
-//             \Log::info('✅ Saved PropertyUnit', [
-//                 'unit_id' => $unit->id,
-//                 'unit_name' => $unit->name
-//             ]);
-//         }
-//     } else {
-//         \Log::warning('⚠️ No units array found in request');
-//     }
-
-//     return response()->json([
-//         'status' => 'success',
-//         'msg'    => __('Property and units successfully created.'),
-//         'id'     => $property->id,
-//     ]);
-// }
 public function store(Request $request)
 {
   if (!\Auth::user()->can('create property')) {
@@ -368,45 +185,45 @@ public function store(Request $request)
     // 🧱 Save all units
     // =============================
     if (!empty($request->units) && is_array($request->units)) {
-  foreach ($request->units as $unitIndex => $unitData) {
-    Log::info("Saving unit #{$unitIndex}", $unitData);
+                foreach ($request->units as $unitIndex => $unitData) {
+                    Log::info("Saving unit #{$unitIndex}", $unitData);
 
-    $unit = new PropertyUnit();
-    $unit->name               = $unitData['unitname'] ?? 'Unnamed Unit';
-    $unit->bedroom            = $unitData['bedroom'] ?? 0;
-    $unit->double_beds        = $unitData['double_beds'] ?? 0;
-    $unit->single_beds        = $unitData['single_beds'] ?? 0;
-    $unit->sofa_beds          = $unitData['sofa_beds'] ?? 0;
-    $unit->kitchen            = $unitData['kitchen'] ?? 'no';
-    $unit->baths              = $unitData['baths'] ?? 0;
-    $unit->rent               = $unitData['rent'] ?? 0;
-    $unit->rent_type          = $unitData['rent_type'] ?? 0;
-    $unit->access_description = $unitData['access_description'] ?? null;
-    $unit->deposit_type       = $unitData['deposit_type'] ?? null;
-    $unit->deposit_amount     = $unitData['deposit_amount'] ?? 0;
-    $unit->notes              = $unitData['notes'] ?? null;
-    $unit->property_id        = $property->id;
-    $unit->parent_id          = parentId();
+                    $unit = new PropertyUnit();
+                    $unit->name               = $unitData['unitname'] ?? 'Unnamed Unit';
+                    $unit->bedroom            = $unitData['bedroom'] ?? 0;
+                    $unit->double_beds        = $unitData['double_beds'] ?? 0;
+                    $unit->single_beds        = $unitData['single_beds'] ?? 0;
+                    $unit->sofa_beds          = $unitData['sofa_beds'] ?? 0;
+                    $unit->kitchen            = $unitData['kitchen'] ?? 'no';
+                    $unit->baths              = $unitData['baths'] ?? 0;
+                    $unit->rent               = $unitData['rent'] ?? 0;
+                    $unit->rent_type          = $unitData['rent_type'] ?? 0;
+                    $unit->access_description = $unitData['access_description'] ?? null;
+                    $unit->deposit_type       = $unitData['deposit_type'] ?? null;
+                    $unit->deposit_amount     = $unitData['deposit_amount'] ?? 0;
+                    $unit->notes              = $unitData['notes'] ?? null;
+                    $unit->property_id        = $property->id;
+                    $unit->parent_id          = parentId();
 
-    $unit->opening_type       = $unitData['opening_type'] ?? null;
-    $unit->street_code        = $unitData['street_opening_code'] ?? null;
-    $unit->door_code          = $unitData['door_opening_code'] ?? null;
-    $unit->key_description    = $unitData['key_description'] ?? null;
-    $unit->access_other       = $unitData['other_access_information'] ?? null;
+                    $unit->opening_type       = $unitData['opening_type'] ?? null;
+                    $unit->street_code        = $unitData['street_opening_code'] ?? null;
+                    $unit->door_code          = $unitData['door_opening_code'] ?? null;
+                    $unit->key_description    = $unitData['key_description'] ?? null;
+                    $unit->access_other       = $unitData['other_access_information'] ?? null;
 
-    Log::info("Unit before save", $unit->toArray()); // 🔹 log unit data before save
+                    Log::info("Unit before save", $unit->toArray()); // 🔹 log unit data before save
 
-    $unit->save();
+                    $unit->save();
 
-    Log::info("Unit saved with ID {$unit->id}");
-}
+                    Log::info("Unit saved with ID {$unit->id}");
+                }
 
-}
-   return response()->json([
-            'status' => 'success',
-            'id'     => $property->id,
-            'msg'    => __('Property successfully created.') 
-                        . (!empty($errorMessage) ? '</br>' . $errorMessage : ''),
+                }
+        return response()->json([
+                    'status' => 'success',
+                    'id'     => $property->id,
+                    'msg'    => __('Property successfully created.') 
+                                . (!empty($errorMessage) ? '</br>' . $errorMessage : ''),
         ]);
 
 

@@ -6,130 +6,161 @@
 @push('script-page')
     <script src="{{ asset('assets/js/vendors/dropzone/dropzone.js') }}"></script>
     <script>
-        // Dropzone init (unchanged)
-        var dropzone = new Dropzone('#demo-upload', {
-            previewTemplate: document.querySelector('.preview-dropzon').innerHTML,
-            parallelUploads: 10,
-            thumbnailHeight: 120,
-            thumbnailWidth: 120,
-            maxFilesize: 10,
-            filesizeBase: 1000,
-            autoProcessQueue: false,
-            thumbnail: function(file, dataUrl) {
-                if (file.previewElement) {
-                    file.previewElement.classList.remove("dz-file-preview");
-                    var images = file.previewElement.querySelectorAll("[data-dz-thumbnail]");
-                    for (var i = 0; i < images.length; i++) {
-                        var thumbnailElement = images[i];
-                        thumbnailElement.alt = file.name;
-                        thumbnailElement.src = dataUrl;
-                    }
-                    setTimeout(function() {
-                        file.previewElement.classList.add("dz-image-preview");
-                    }, 1);
-                }
-            }
-        });
-
-        // Property update handler (uses FormData + method spoofing)
         (function ($) {
             'use strict';
 
-            // confirm jQuery is available
-            if (typeof $ === 'undefined') {
-                console.error('jQuery not found. Make sure jQuery is loaded before this script.');
-            } else {
-                console.log('Update handler attached');
+            // helper: toast wrapper (uses toastr if present, otherwise alert)
+            function notify(type, message, title) {
+                if (typeof toastr !== 'undefined') {
+                    if (type === 'success') toastr.success(message, title || 'Success');
+                    else if (type === 'error') toastr.error(message, title || 'Error');
+                    else if (type === 'info') toastr.info(message, title || '');
+                    else toastr.warning(message, title || '');
+                } else {
+                    // fallback
+                    alert((title ? title + ': ' : '') + message);
+                }
             }
 
-            $('#property-update').on('click', function() {
-                $('#property-update').attr('disabled', true);
+            // Dropzone init (unchanged behavior)
+            var dropzone;
+            try {
+                dropzone = new Dropzone('#demo-upload', {
+                    previewTemplate: document.querySelector('.preview-dropzon').innerHTML,
+                    parallelUploads: 10,
+                    thumbnailHeight: 120,
+                    thumbnailWidth: 120,
+                    maxFilesize: 10,
+                    filesizeBase: 1000,
+                    autoProcessQueue: false,
+                    thumbnail: function(file, dataUrl) {
+                        if (file.previewElement) {
+                            file.previewElement.classList.remove("dz-file-preview");
+                            var images = file.previewElement.querySelectorAll("[data-dz-thumbnail]");
+                            for (var i = 0; i < images.length; i++) {
+                                var thumbnailElement = images[i];
+                                thumbnailElement.alt = file.name;
+                                thumbnailElement.src = dataUrl;
+                            }
+                            setTimeout(function() {
+                                file.previewElement.classList.add("dz-image-preview");
+                            }, 1);
+                        }
+                    }
+                });
+            } catch (err) {
+                console.warn('Dropzone not initialized:', err);
+                dropzone = null;
+            }
+
+            // Ensure jQuery present
+            if (typeof $ === 'undefined') {
+                console.error('jQuery not found. Make sure jQuery is loaded before this script.');
+                return;
+            }
+
+            // Update handler — submit via AJAX
+            $(document).on('click', '#property-update', function (e) {
+                e.preventDefault(); // prevent default form submission
+                var $btn = $(this);
+                $btn.attr('disabled', true);
 
                 var fd = new FormData();
+                // thumbnail file (single)
                 var fileInput = document.getElementById('thumbnail');
-                var file = fileInput && fileInput.files.length ? fileInput.files[0] : undefined;
+                var thumbnailFile = fileInput && fileInput.files && fileInput.files.length ? fileInput.files[0] : null;
 
-                // Append dropzone files
+                // Append Dropzone files (if any)
                 if ($('#demo-upload').length && $('#demo-upload')[0].dropzone) {
-                    var files = $('#demo-upload')[0].dropzone.getAcceptedFiles();
-                    $.each(files, function(key, f) {
+                    var dzFiles = $('#demo-upload')[0].dropzone.getAcceptedFiles();
+                    $.each(dzFiles, function (key, f) {
                         fd.append('property_images[' + key + ']', f);
                     });
                 }
 
-                // Append thumbnail
-                if (file === undefined) {
-                    fd.append('thumbnail', '');
-                } else {
-                    fd.append('thumbnail', file);
-                }
+                // Append thumbnail: if no file chosen, append empty string to keep key present
+                fd.append('thumbnail', thumbnailFile || '');
 
-                // Append serialized inputs
+                // Append serialized form inputs
                 var other_data = $('#property_form').serializeArray();
-                $.each(other_data, function(key, input) {
+                $.each(other_data, function (key, input) {
                     fd.append(input.name, input.value);
                 });
 
-                // Method spoof for PUT
+                // Method spoof to PUT for update route
                 fd.append('_method', 'PUT');
 
-                console.log('Sending update to:', "{{ route('property.update', $property->id) }}");
+                var ajaxUrl = "{{ route('property.update', $property->id) }}";
+                console.log('Sending update to:', ajaxUrl);
 
                 $.ajax({
-                    url: "{{ route('property.update', $property->id) }}",
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    },
+                    url: ajaxUrl,
+                    headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
                     data: fd,
                     contentType: false,
                     processData: false,
-                    type: 'POST', // using POST + _method=PUT
-                    success: function(data) {
-                        if (data.status == "success") {
-                            $('#property-update').attr('disabled', true);
-                            toastrs('success', data.msg, 'success');
-                            var url = '{{ route('property.show', ':id') }}';
-                            url = url.replace(':id', data.id);
-                            setTimeout(function() {
-                                window.location.href = url;
-                            }, 1000);
+                    type: 'POST',
+                    success: function (data) {
+                        if (data && data.status && data.status === 'success') {
+                            setTimeout(function () {
+                                // reload current page
+                                location.reload();
+                            }, 100);
                         } else {
-                            toastrs('Error', data.msg, 'error');
-                            $('#property-update').attr('disabled', false);
+                            var message = (data && data.msg) ? data.msg : '{{ __("An error occurred while updating.") }}';
+                            notify('error', message);
                         }
                     },
-                    error: function(data) {
-                        $('#property-update').attr('disabled', false);
-                        if (data.error) {
-                            toastrs('Error', data.error, 'error');
-                        } else {
-                            toastrs('Error', data, 'error');
+                    error: function (xhr) {
+                        var message = 'Something went wrong';
+                        if (xhr && xhr.responseJSON) {
+                            // prefer msg then message then errors
+                            message = xhr.responseJSON.msg || xhr.responseJSON.message || message;
+                            if (!message && xhr.responseJSON.errors) {
+                                // show first validation error
+                                var errors = xhr.responseJSON.errors;
+                                for (var k in errors) {
+                                    if (errors[k] && errors[k].length) {
+                                        message = errors[k][0];
+                                        break;
+                                    }
+                                }
+                            }
+                        } else if (xhr && xhr.responseText) {
+                            message = xhr.responseText;
                         }
+                        notify('error', message);
                     },
+                    complete: function () {
+                        // always re-enable the button
+                        $btn.attr('disabled', false);
+                    },
+                    timeout: 120000 // 2 minutes — safe for uploads
                 });
             });
 
-            // ***** DELETE handler (thumbnail & property images) with debug logs *****
-            $(document).on('click', '.delete-image', function(e) {
+            // DELETE handler (thumbnail & property images)
+            $(document).on('click', '.delete-image', function (e) {
                 e.preventDefault();
-
-                console.log('Delete button clicked');
 
                 var $btn = $(this);
                 var id = $btn.data('id');
-                var type = $btn.data('type') || ''; // expected: 'thumbnail' | 'property-image'
+                var type = $btn.data('type') || ''; // expected 'thumbnail' or 'property-image'
+
                 if (!id) {
                     console.warn('Delete button missing data-id');
                     return;
                 }
 
-                if (!confirm("Are you sure you want to delete this image?")) return;
+                if (!confirm("{{ __('Are you sure you want to delete this image?') }}")) {
+                    return;
+                }
 
                 var url;
                 if (type === 'thumbnail') {
                     url = "{{ url('/property/thumbnail') }}/" + id;
                 } else {
-                    // default to property image
+                    // default to property image endpoint
                     url = "{{ url('/property/image') }}/" + id;
                 }
 
@@ -137,54 +168,54 @@
 
                 $.ajax({
                     url: url,
-                    type: "POST", // POST + _method=DELETE
+                    type: "POST",
                     data: {
                         _method: "DELETE",
                         _token: "{{ csrf_token() }}"
                     },
-                    success: function(response) {
+                    success: function (response) {
                         console.log('Delete response:', response);
-                        if (response && response.success) {
+
+                        // Response could be { success: true, message: 'Deleted' } or { status: 'success', msg: 'Deleted' }
+                        var success = (response && (response.success === true || response.status === 'success'));
+                        var message = response.message || response.msg || '{{ __("Deleted") }}';
+
+                        if (success) {
                             if (type === 'thumbnail') {
+                                // remove thumbnail wrapper if present
                                 var wrapper = ".thumbnail-wrapper-" + id;
                                 if ($(wrapper).length) {
                                     $(wrapper).remove();
-                                    // show fallback text in the thumbnail card-body
-                                    var $thumbnailCard = $('.card').has('div.thumbnail-wrapper-' + id).first();
-                                    if ($thumbnailCard.length) {
-                                        $thumbnailCard.find('.card-body').first().append('<p>{{ __('No thumbnail uploaded.') }}</p>');
-                                    } else {
-                                        $('.card-body').first().append('<p>{{ __('No thumbnail uploaded.') }}</p>');
-                                    }
+                                }
+                                // optional: show fallback text where appropriate
+                                var $thumbCardBody = $('.card-body').has(wrapper).first();
+                                if ($thumbCardBody.length === 0) {
+                                    // append fallback to first card-body (best-effort)
+                                    $('.card-body').first().append('<p>{{ __('No thumbnail uploaded.') }}</p>');
                                 }
                             } else {
+                                // remove property image container
                                 $('#image-' + id).remove();
                             }
-
-                            if (typeof toastr !== 'undefined') {
-                                toastr.success(response.message || '{{ __("Deleted") }}');
-                            } else {
-                                alert(response.message || '{{ __("Deleted") }}');
-                            }
+                            notify('success', message);
                         } else {
-                            alert(response.message || '{{ __("Could not delete image") }}');
+                            notify('error', message || '{{ __("Could not delete image") }}');
                         }
                     },
-                    error: function(xhr) {
-                        console.error('Delete error:', xhr);
+                    error: function (xhr) {
                         var msg = 'Something went wrong';
                         try {
                             var json = xhr.responseJSON || JSON.parse(xhr.responseText);
-                            msg = json.message || xhr.responseText || msg;
+                            msg = json.message || json.msg || xhr.responseText || msg;
                         } catch (e) {
                             msg = xhr.responseText || msg;
                         }
-                        alert(msg);
+                        notify('error', msg);
                     }
                 });
             });
 
-            console.log('Delete handler attached');
+            console.log('Property edit script initialized');
         })(jQuery);
     </script>
 @endpush
@@ -230,7 +261,6 @@
 
                                 <div class="form-group">
                                     {{ Form::label('thumbnail', __('Thumbnail Image'), ['class' => 'form-label']) }}
-                                    {{-- Added id="thumbnail" so JS can read the file input --}}
                                     {{ Form::file('thumbnail', ['class' => 'form-control', 'id' => 'thumbnail']) }}
                                 </div>
 
@@ -273,7 +303,7 @@
                     </div>
                 </div>
 
-                <div class="card mt-3">
+                <div class="card mt-3 w-100">
                     <div class="card-header">
                         {{ __('Thumbnail Image') }}
                     </div>
@@ -296,7 +326,7 @@
                     </div>
                 </div>
 
-                <div class="card mt-3">
+                <div class="card mt-3 w-100">
                     <div class="card-header">
                         {{ __('Property Images') }}
                     </div>

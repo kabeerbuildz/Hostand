@@ -276,11 +276,12 @@
                             const time = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
                             arrivalTimeFormatted = `${year}-${month}-${day} ${time}`;
                         }
+                        console.log(data);
 
                         let html = `
                             <div class="mb-2">
-                                <p class="mb-1"><strong>${translations.property}:</strong> ${data.property ?? '-'}</p>
-                                <p class="mb-1"><strong>${translations.unit}:</strong> ${data.unit ?? '-'}</p>
+                                <p class="mb-1"><strong>${translations.property}:</strong> ${data.property_name ?? data.property ?? '-'}</p>
+                                <p class="mb-1"><strong>${translations.unit}:</strong> ${data.unit_name ?? data.unit ?? '-'}</p>
                                 <p class="mb-1"><strong>${translations.maintainer}:</strong> ${data.maintainer ?? '-'}</p>
                                 <p class="mb-1"><strong>${translations.arrival_time}:</strong> ${arrivalTimeFormatted}</p>
                                 <p class="mb-1"><strong>${translations.number_of_people}:</strong> ${peopleCount}</p>
