@@ -133,7 +133,7 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5>{{ __('Notes for Today') }}</h5>
                     @if(!empty($notesWidgetAvailable))
-                        <a href="{{ route('notes.index') }}" class="btn btn-sm btn-outline-primary">{{ __('Open Notes') }}</a>
+                        <a href="{{ route('note.index') }}" class="btn btn-sm btn-outline-primary">{{ __('Open Notes') }}</a>
                     @else
                         <a href="" class="btn btn-sm btn-primary">{{ __('Add Note') }}</a>
                     @endif
@@ -156,7 +156,7 @@
                     <h5>{{ __('Live Chat') }}</h5>
                 </div>
                 <div class="card-body text-center">
-                    <a href="" class="btn btn-success w-100">
+                    <a href="{{ route('contact.index') }}" class="btn btn-success w-100">
                         <i class="ti ti-message-circle"></i> {{ __('Open Live Chat') }}
                     </a>
                 </div>
