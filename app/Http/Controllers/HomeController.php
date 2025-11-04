@@ -29,16 +29,61 @@ class HomeController extends Controller
     {
         if (\Auth::check()) {
             if (\Auth::user()->type == 'super admin') {
+                // Legacy subscription/transaction KPIs removed on request. Instead provide
+                // operational KPIs and today's services for the calendar widget.
                 $result['totalOrganization'] = User::where('type', 'owner')->count();
-                $result['totalSubscription'] = Subscription::count();
-                $result['totalTransaction'] = PackageTransaction::count();
-                $result['totalIncome'] = PackageTransaction::sum('amount');
-                $result['totalNote'] = NoticeBoard::where('parent_id', parentId())->count();
-                $result['totalContact'] = Contact::where('parent_id', parentId())->count();
+
+                // Operational KPIs requested for the dashboard
+                $result['activeCleaners'] = User::where('type', 'cleaner')->where('is_active', 1)->count();
+                $result['activeRiders'] = User::where('type', 'rider')->where('is_active', 1)->count();
+                $result['activeMaintenance'] = User::where('type', 'maintainer')->where('is_active', 1)->count();
+
+                // Requests and support tickets
+                $result['requestsToday'] = MaintenanceRequest::whereDate('request_date', date('Y-m-d'))->count();
+                $result['openTickets'] = Support::where('status', 'open')->count();
+
+                // Prepare events for FullCalendar (services for today)
+                $todayRequests = MaintenanceRequest::with(['types', 'properties', 'units', 'maintainers'])
+                    ->whereDate('request_date', date('Y-m-d'))
+                    ->get();
+
+                $servicesForTheDay = [];
+                foreach ($todayRequests as $r) {
+                    $titleParts = [];
+                    if (!empty($r->types->name)) {
+                        $titleParts[] = $r->types->name;
+                    }
+                    if (!empty($r->properties->name)) {
+                        $titleParts[] = $r->properties->name;
+                    }
+                    if (!empty($r->units->name)) {
+                        $titleParts[] = $r->units->name;
+                    }
+                    $title = implode(' - ', $titleParts) ?: __('Service');
+
+                    // If arrival_time supplied, include it to form a datetime
+                    $start = $r->request_date;
+                    if (!empty($r->arrival_time)) {
+                        // normalize arrival_time to HH:MM if possible
+                        $start = $r->request_date . 'T' . substr($r->arrival_time, 0, 5);
+                    }
+
+                    $servicesForTheDay[] = [
+                        'title' => $title,
+                        'start' => $start,
+                        'id' => $r->id,
+                        'maintainer' => $r->maintainers->name ?? null,
+                    ];
+                }
+
+                // Notes for today (widget / shortcut)
+                $notes = NoticeBoard::whereDate('created_at', date('Y-m-d'))->where('parent_id', parentId())->get();
+                // Only mark widget available if the route exists to avoid route exceptions in view
+                $notesWidgetAvailable = \Route::has('note.index');
 
                 $result['organizationByMonth'] = $this->organizationByMonth();
                 $result['paymentByMonth'] = $this->paymentByMonth();
-                return view('dashboard.super_admin', compact('result'));
+                return view('dashboard.super_admin', compact('result', 'servicesForTheDay', 'notes', 'notesWidgetAvailable'));
             } else {
                 $result['totalNote'] = NoticeBoard::where('parent_id', parentId())->count();
                 $result['totalContact'] = Contact::where('parent_id', parentId())->count();
