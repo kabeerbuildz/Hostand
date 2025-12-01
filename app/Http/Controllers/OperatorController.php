@@ -199,6 +199,8 @@ class OperatorController extends Controller
             ->where('maintainer_id', $operator->id)
             ->firstOrFail();
 
+        
+
         $request->validate([
             'status' => 'required|in:pending,in_progress,completed',
             'hours_worked' => 'nullable|numeric|min:0',
@@ -207,10 +209,21 @@ class OperatorController extends Controller
 
         $service->update([
             'status' => $request->status,
-            'hours_worked' => $request->hours_worked,
+            'hours_worked' => $request->filled('hours_worked') 
+                    ? $request->hours_worked 
+                    : 0,
             'operator_notes' => $request->notes,
             'completed_at' => $request->status === 'completed' ? now() : null
         ]);
+        // if ($service->status !== 'in_progress') {
+            $this->startTimer($service->id);
+        // }
+
+
+        if($service->started_at != null)
+        {
+            $this->stopTimer($service->id);
+        }
 
         return redirect()->back()->with('success', __('Service status updated successfully!'));
     }
@@ -222,9 +235,9 @@ public function startTimer($serviceId)
         ->where('maintainer_id', $operator->id)
         ->firstOrFail();
 
-    if ($service->status !== 'in_progress') {
-        return redirect()->back()->with('error', __('Service must be in progress to start timer.'));
-    }
+    // if ($service->status !== 'in_progress') {
+    //     return redirect()->back()->with('error', __('Service must be in progress to start timer.'));
+    // }
 
     // Only set started_at if not already set
     if (!$service->started_at) {

@@ -47,9 +47,9 @@ public function store(Request $request)
         $validator = \Validator::make(
             $request->all(),
             [
-                // 'name'    => 'required',
+                'name'    => 'required',
                 'email'   => 'required|email', // receiver email
-                // 'subject' => 'required',
+                'subject' => 'required',
                 'message' => 'required',
             ]
         );
@@ -143,4 +143,81 @@ public function store(Request $request)
         }
 
     }
+public function search(Request $request) {
+    $q = $request->get('q');
+    $authUser = \Auth::user();
+    $hostandEmail = 'servizi.atman@gmail.com';
+
+    // Build the base query
+    $query = User::query();
+
+    // If user type is 'owner', always include Hostand user
+    if ($authUser && $authUser->type == 'owner') {
+        // Get Hostand user
+        $hostandUser = User::where('email', $hostandEmail)->first(['id','first_name','last_name','email','phone_number']);
+        
+        // Build search query for other users
+        if ($q) {
+            $query->where(function($subQuery) use ($q) {
+                $subQuery->where('first_name', 'like', "%$q%")
+                         ->orWhere('last_name', 'like', "%$q%");
+            });
+        } else {
+            // If no search query, return empty for regular users (only Hostand will show)
+            $query->whereRaw('1 = 0'); // This ensures no regular users are returned
+        }
+        
+        $users = $query->get(['id','first_name','last_name','email','phone_number']);
+        
+        // Add Hostand user if it exists and matches the search (or if no search query)
+        if ($hostandUser) {
+            $shouldIncludeHostand = true;
+            
+            // If there's a search query, check if it matches Hostand
+            if ($q) {
+                $qLower = strtolower($q);
+                $name = strtolower(trim($hostandUser->first_name . ' ' . $hostandUser->last_name));
+                $email = strtolower($hostandUser->email);
+                
+                // Only include if query matches name or email
+                if (strpos($name, $qLower) === false && strpos($email, $qLower) === false) {
+                    $shouldIncludeHostand = false;
+                }
+            }
+            
+            // Add Hostand to results if it should be included
+            if ($shouldIncludeHostand) {
+                $users = $users->push($hostandUser)->unique('id');
+            }
+        }
+    } else {
+        // For non-owners, normal search behavior
+        if ($q) {
+            $users = $query->where(function($subQuery) use ($q) {
+                    $subQuery->where('first_name', 'like', "%$q%")
+                             ->orWhere('last_name', 'like', "%$q%");
+                })
+                ->get(['id','first_name','last_name','email','phone_number']);
+        } else {
+            // Return initial results when dropdown is opened (limit to prevent too many results)
+            $users = $query->orderBy('first_name')
+                           ->limit(50)
+                           ->get(['id','first_name','last_name','email','phone_number']);
+        }
+    }
+
+    // Wrap in results
+    return response()->json([
+        'results' => $users->map(function($user) {
+            return [
+                'id' => $user->id,
+                'text' => $user->first_name . ' ' . $user->last_name,
+                'email' => $user->email,
+                'contact' => $user->phone_number
+            ];
+        })
+    ]);
+}
+
+
 }

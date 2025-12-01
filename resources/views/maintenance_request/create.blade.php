@@ -32,7 +32,7 @@
 
         {{-- Arrival Date/Time --}}
         <div class="form-group col-md-6 col-lg-6">
-            {{ Form::label('arrival_time', __('Arrival Date & Time'), ['class'=>'form-label']) }}
+            {{ Form::label('arrival_time', __('Service Date & Time'), ['class'=>'form-label']) }}
             {{ Form::datetimeLocal('arrival_time', null, ['class' => 'form-control']) }}
         </div>
 

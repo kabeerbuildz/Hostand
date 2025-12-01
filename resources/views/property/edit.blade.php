@@ -215,6 +215,25 @@
                 });
             });
 
+            // Opening type dynamic fields for Property tab
+            const propertyOpeningTypeSelect = document.getElementById('property_opening_type_select');
+            const propertyCodeFields = document.getElementById('property-code-fields');
+            if (propertyOpeningTypeSelect) {
+                propertyOpeningTypeSelect.addEventListener('change', function() {
+                    if (this.value === 'code') {
+                        propertyCodeFields.classList.remove('d-none');
+                    } else {
+                        // Hide code fields for 'key' or empty selection
+                        propertyCodeFields.classList.add('d-none');
+                    }
+                });
+                
+                // Initialize on page load based on current value
+                if (propertyOpeningTypeSelect.value === 'code') {
+                    propertyCodeFields.classList.remove('d-none');
+                }
+            }
+
             console.log('Property edit script initialized');
         })(jQuery);
     </script>
@@ -244,10 +263,7 @@
                     <div class="card">
                         <div class="card-body">
                             <div class="info-group">
-                                <div class="form-group ">
-                                    {{ Form::label('type', __('Type'), ['class' => 'form-label']) }}
-                                    {{ Form::select('type', $types, null, ['class' => 'form-control hidesearch']) }}
-                                </div>
+                              
 
                                 <div class="form-group">
                                     {{ Form::label('name', __('Name'), ['class' => 'form-label']) }}
@@ -297,6 +313,85 @@
                                 <div class="form-group ">
                                     {{ Form::label('address', __('Address'), ['class' => 'form-label']) }}
                                     {{ Form::textarea('address', null, ['class' => 'form-control', 'rows' => 3, 'placeholder' => __('Enter Property Address')]) }}
+                                </div>
+
+                                {{-- Floor Field --}}
+                                <div class="form-group">
+                                    {{ Form::label('piano', __('Floor'), ['class' => 'form-label']) }}
+                                    {{ Form::text('piano', null, ['class' => 'form-control conditional-field', 'placeholder' => __('Enter Floor')]) }}
+                                </div>
+
+                                {{-- Staircase Field --}}
+                                <div class="form-group">
+                                    {{ Form::label('staircase', __('Staircase'), ['class' => 'form-label']) }}
+                                    {{ Form::text('staircase', null, ['class' => 'form-control conditional-field', 'placeholder' => __('Enter Staircase')]) }}
+                                </div>
+
+                                {{-- Opening Type Field --}}
+                                <div class="form-group">
+                                    {{ Form::label('opening_type', __('Opening Type'), ['class' => 'form-label']) }}
+                                    {{ Form::select('opening_type', ['' => __('Select Opening Type'), 'key' => __('Key'), 'code' => __('Code')], null, ['class' => 'form-control conditional-field', 'id' => 'property_opening_type_select']) }}
+                                </div>
+
+                                {{-- Name on Doorbell Field --}}
+                                <div class="form-group">
+                                    {{ Form::label('sign_detail', __('Name on the Doorbell'), ['class' => 'form-label']) }}
+                                    {{ Form::text('sign_detail', null, ['class' => 'form-control conditional-field', 'placeholder' => __('Enter Name on the Doorbell')]) }}
+                                </div>
+
+                                {{-- Internal Access Description Field --}}
+                                <div class="form-group">
+                                    {{ Form::label('access_other', __('Internal Access Description'), ['class' => 'form-label']) }}
+                                    {{ Form::textarea('access_other', null, [
+                                        'class' => 'form-control conditional-field',
+                                        'rows' => 3,
+                                        'placeholder' => __('Enter Internal Access Description')
+                                    ]) }}
+                                </div>
+
+                                {{-- Opening Type Code Fields (initially hidden) --}}
+                                <div id="property-code-fields" class="d-none">
+                                    <div class="row">
+                                        <div class="col-sm-6 mb-3">
+                                            <div class="form-group">
+                                                {{ Form::label('street_code', __('Street Opening Code'), ['class' => 'form-label']) }}
+                                                {{ Form::text('street_code', null, [
+                                                    'class' => 'form-control',
+                                                    'placeholder' => __('Enter street opening code')
+                                                ]) }}
+                                            </div>
+                                        </div>
+
+                                        <div class="col-sm-6 mb-3">
+                                            <div class="form-group">
+                                                {{ Form::label('door_code', __('Door Opening Code'), ['class' => 'form-label']) }}
+                                                {{ Form::text('door_code', null, [
+                                                    'class' => 'form-control',
+                                                    'placeholder' => __('Enter door opening code')
+                                                ]) }}
+                                            </div>
+                                        </div>
+
+                                        <div class="col-sm-6 mb-3">
+                                            <div class="form-group">
+                                                {{ Form::label('key_description', __('Key Description'), ['class' => 'form-label']) }}
+                                                {{ Form::text('key_description', null, [
+                                                    'class' => 'form-control',
+                                                    'placeholder' => __('Describe the key or entry details')
+                                                ]) }}
+                                            </div>
+                                        </div>
+
+                                        <div class="col-sm-6 mb-3">
+                                            <div class="form-group">
+                                                {{ Form::label('access_other', __('Other Access Information'), ['class' => 'form-label']) }}
+                                                {{ Form::text('access_other', null, [
+                                                    'class' => 'form-control',
+                                                    'placeholder' => __('Enter any other access instructions')
+                                                ]) }}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

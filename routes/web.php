@@ -239,6 +239,7 @@ Route::group(
         Route::put('property/{pid}/unit/{id}/update', [PropertyController::class, 'unitUpdate'])->name('unit.update');
         Route::delete('property/{pid}/unit/{id}/destroy', [PropertyController::class, 'unitDestroy'])->name('unit.destroy');
         Route::get('property/{pid}/unit', [PropertyController::class, 'getPropertyUnit'])->name('property.unit');
+        Route::get('property/{id}/location-type', [PropertyController::class, 'getPropertyLocationType'])->name('property.location-type');
     }
 );
 
@@ -308,6 +309,7 @@ Route::group(
     function () {
         Route::get('maintenance-request/pending', [MaintenanceRequestController::class, 'pendingRequest'])->name('maintenance-request.pending');
         Route::get('maintenance-request/in-progress', [MaintenanceRequestController::class, 'inProgressRequest'])->name('maintenance-request.inprogress');
+        Route::get('/maintenance-request/completed', [MaintenanceRequestController::class, 'completed'])->name('maintenance-request.completed');
         Route::get('maintenance-request/{id}/action', [MaintenanceRequestController::class, 'action'])->name('maintenance-request.action');
         Route::post('maintenance-request/{id}/action', [MaintenanceRequestController::class, 'actionData'])->name('maintenance-request.action');
         Route::resource('maintenance-request', MaintenanceRequestController::class);
@@ -427,6 +429,7 @@ Route::group([
 });
 
 //-------------------------------Admin Service Assignment Management-------------------------------------------
+
 Route::group([
     'middleware' => ['auth', 'XSS'],
     'prefix' => 'admin/service-assignment',
@@ -482,4 +485,6 @@ Route::get('/users/{id}/details', [UserController::class, 'show'])
     ->middleware(['auth', 'XSS']);
 
 
+
+Route::get('/admin/users/search', [ContactController::class, 'search'])->name('users.search');
 

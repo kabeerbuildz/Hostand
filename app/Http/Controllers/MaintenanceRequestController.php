@@ -179,7 +179,8 @@ public function store(Request $request)
         $MaintenanceRequest->unit_id       = $request->unit_id;
         $MaintenanceRequest->service_type  = $request->service;
         $MaintenanceRequest->arrival_time  = $request->arrival_time; // user input
-        $MaintenanceRequest->request_date  = now()->toDateString();   // today's date
+        // $MaintenanceRequest->request_date  = now()->toDateString();   // today's date
+        $MaintenanceRequest->request_date = now()->toDateTimeString();
         $MaintenanceRequest->people_count  = $request->people_count;
         $MaintenanceRequest->notes         = $request->notes;
         $MaintenanceRequest->parent_id     = parentId();
@@ -189,6 +190,8 @@ public function store(Request $request)
         if ($maintainer) {
             $MaintenanceRequest->maintainer_id = $maintainer->user_id;
         }
+
+        // dd($MaintenanceRequest);
 
         $MaintenanceRequest->save();
 
@@ -286,9 +289,6 @@ public function store(Request $request)
         ];
 
         $status = MaintenanceRequest::$status;
-
-     
-
 
         return view('maintenance_request.edit', compact(
             'property',
@@ -516,60 +516,57 @@ public function update(Request $request, MaintenanceRequest $maintenanceRequest)
 
     public function pendingRequest()
     {
-        if (\Auth::user()->can('manage maintenance request')) {
-            if (\Auth::user()->type == 'maintainer') {
-                $maintenanceRequests = MaintenanceRequest::where('maintainer_id', \Auth::user()->id)->where('status', 'pending')->get();
-            } elseif (\Auth::user()->type == 'tenant') {
-                $user = \Auth::user();
-                $tenant = $user->tenants;
-                $maintenanceRequests = MaintenanceRequest::where('property_id', !empty($tenant) ? $tenant->property : 0)->where('unit_id', !empty($tenant) ? $tenant->unit : 0)->where('status', 'pending')->get();
-            } else {
-                $maintenanceRequests = MaintenanceRequest::where('parent_id', parentId())->where('status', 'pending')->get();
-            }
-            
-            // Load all relationships with property details
-            $maintenanceRequests->load([
-                'properties' => function($query) {
-                    $query->with(['propertyImages', 'totalUnits']);
-                },
-                'units',
-                'types',
-                'maintainers'
-            ]);
-            
-            return view('maintenance_request.type', compact('maintenanceRequests'));
-        } else {
-            return redirect()->back()->with('error', __('Permission Denied!'));
-        }
+        $maintenanceRequests = $this->getMaintenanceRequestsByStatus('pending');
+        return view('maintenance_request.type', compact('maintenanceRequests'));
     }
 
     public function inProgressRequest()
     {
-        if (\Auth::user()->can('manage maintenance request')) {
-            if (\Auth::user()->type == 'maintainer') {
-                $maintenanceRequests = MaintenanceRequest::where('maintainer_id', \Auth::user()->id)->where('status', 'in_progress')->get();
-            } elseif (\Auth::user()->type == 'tenant') {
-                $user = \Auth::user();
-                $tenant = $user->tenants;
-                $maintenanceRequests = MaintenanceRequest::where('property_id', !empty($tenant) ? $tenant->property : 0)->where('unit_id', !empty($tenant) ? $tenant->unit : 0)->where('status', 'in_progress')->get();
-            } else {
-                $maintenanceRequests = MaintenanceRequest::where('parent_id', parentId())->where('status', 'in_progress')->get();
-            }
-            
-            // Load all relationships with property details
-            $maintenanceRequests->load([
-                'properties' => function($query) {
-                    $query->with(['propertyImages', 'totalUnits']);
-                },
-                'units',
-                'types',
-                'maintainers'
-            ]);
-            
-            return view('maintenance_request.type', compact('maintenanceRequests'));
-        } else {
+        $maintenanceRequests = $this->getMaintenanceRequestsByStatus('in_progress');
+        return view('maintenance_request.type', compact('maintenanceRequests'));
+    }
+
+    public function completed()
+    {
+        $maintenanceRequests = $this->getMaintenanceRequestsByStatus('completed');
+        return view('maintenance_request.type', compact('maintenanceRequests'));
+    }
+
+
+    private function getMaintenanceRequestsByStatus($status)
+    {
+        if (!\Auth::user()->can('manage maintenance request')) {
             return redirect()->back()->with('error', __('Permission Denied!'));
         }
+
+        if (\Auth::user()->type == 'maintainer') {
+            $maintenanceRequests = MaintenanceRequest::where('maintainer_id', \Auth::user()->id)
+                ->where('status', $status)
+                ->get();
+        } elseif (\Auth::user()->type == 'tenant') {
+            $user = \Auth::user();
+            $tenant = $user->tenants;
+            $maintenanceRequests = MaintenanceRequest::where('property_id', !empty($tenant) ? $tenant->property : 0)
+                ->where('unit_id', !empty($tenant) ? $tenant->unit : 0)
+                ->where('status', $status)
+                ->get();
+        } else {
+            $maintenanceRequests = MaintenanceRequest::where('parent_id', parentId())
+                ->where('status', $status)
+                ->get();
+        }
+
+        // Load all relationships
+        $maintenanceRequests->load([
+            'properties' => function($query) {
+                $query->with(['propertyImages', 'totalUnits']);
+            },
+            'units',
+            'types',
+            'maintainers'
+        ]);
+
+        return $maintenanceRequests;
     }
-    
+
 }

@@ -29,7 +29,7 @@
             {{ Form::date('request_date', null, ['class' => 'form-control']) }}
         </div> --}}
         <div class="form-group col-md-6 col-lg-6">
-    {{ Form::label('arrival_time', __('Arrival Date & Time'), ['class'=>'form-label']) }}
+    {{ Form::label('arrival_time', __('Service Date & Time'), ['class'=>'form-label']) }}
 
     {{ Form::datetimeLocal(
         'arrival_time', 
@@ -51,7 +51,7 @@
 
 
         <div class="form-group col-md-6 col-lg-6">
-    {{ Form::label('issue_type', __('Issue Type'), ['class' => 'form-label']) }}
+    {{ Form::label('issue_type', __('Service Type'), ['class' => 'form-label']) }}
     {{ Form::select(
         'issue_type',
         $types,

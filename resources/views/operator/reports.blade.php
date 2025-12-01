@@ -72,68 +72,70 @@
     </div>
 
     <!-- Performance Statistics -->
-    <div class="row mt-4">
-        <div class="col-lg-2 col-md-4 mb-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <div class="avtar bg-primary bg-opacity-10 mx-auto mb-3">
-                        <i class="ti ti-list text-primary f-24"></i>
-                    </div>
-                    <h4 class="text-primary mb-1">{{ $totalAllServices }}</h4>
-                    <p class="text-muted mb-0">{{ __('All Services') }}</p>
+   <div class="row mt-4">
+    <div class="col-lg-2 col-md-4 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <div class="avtar bg-primary bg-opacity-10 mx-auto mb-3">
+                    <i class="ti ti-list text-primary f-24"></i>
                 </div>
+                <h4 class="text-primary mb-1">{{ $totalAllServices }}</h4>
+                <p class="text-muted mb-0">{{ __('All Services') }}</p>
             </div>
         </div>
+    </div>
 
-        <div class="col-lg-2 col-md-4 mb-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <div class="avtar bg-success bg-opacity-10 mx-auto mb-3">
-                        <i class="ti ti-check-circle text-success f-24"></i>
-                    </div>
-                    <h4 class="text-success mb-1">{{ $totalServices }}</h4>
-                    <p class="text-muted mb-0">{{ __('Completed') }}</p>
+    <div class="col-lg-2 col-md-4 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <div class="avtar bg-success bg-opacity-10 mx-auto mb-3">
+                    <i class="ti ti-check-circle text-success f-24"></i>
                 </div>
+                <h4 class="text-success mb-1">{{ $totalServices }}</h4>
+                <p class="text-muted mb-0">{{ __('Completed') }}</p>
             </div>
         </div>
+    </div>
 
-        <div class="col-lg-2 col-md-4 mb-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <div class="avtar bg-warning bg-opacity-10 mx-auto mb-3">
-                        <i class="ti ti-clock text-warning f-24"></i>
-                    </div>
-                    <h4 class="text-warning mb-1">{{ $pendingServices }}</h4>
-                    <p class="text-muted mb-0">{{ __('Pending') }}</p>
+    <div class="col-lg-2 col-md-4 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <div class="avtar bg-warning bg-opacity-10 mx-auto mb-3">
+                    <i class="ti ti-clock text-warning f-24"></i>
                 </div>
+                <h4 class="text-warning mb-1">{{ $pendingServices }}</h4>
+                <p class="text-muted mb-0">{{ __('Pending') }}</p>
             </div>
         </div>
+    </div>
 
-        <div class="col-lg-2 col-md-4 mb-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <div class="avtar bg-info bg-opacity-10 mx-auto mb-3">
-                        <i class="ti ti-tools text-info f-24"></i>
-                    </div>
-                    <h4 class="text-info mb-1">{{ $inProgressServices }}</h4>
-                    <p class="text-muted mb-0">{{ __('In Progress') }}</p>
+    <div class="col-lg-2 col-md-4 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <div class="avtar bg-info bg-opacity-10 mx-auto mb-3">
+                    <i class="ti ti-tools text-info f-24"></i>
                 </div>
+                <h4 class="text-info mb-1">{{ $inProgressServices }}</h4>
+                <p class="text-muted mb-0">{{ __('In Progress') }}</p>
             </div>
         </div>
+    </div>
 
-        <div class="col-lg-2 col-md-4 mb-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <div class="avtar bg-success bg-opacity-10 mx-auto mb-3">
-                        <i class="ti ti-clock text-success f-24"></i>
-                    </div>
-                    <h4 class="text-success mb-1">{{ number_format($totalHours, 1) }}</h4>
-                    <p class="text-muted mb-0">{{ __('Total Hours') }}</p>
+    <div class="col-lg-2 col-md-4 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <div class="avtar bg-success bg-opacity-10 mx-auto mb-3">
+                    <i class="ti ti-clock text-success f-24"></i>
                 </div>
+                <h4 class="text-success mb-1">{{ number_format($totalHours, 1) }}</h4>
+                <p class="text-muted mb-0">{{ __('Total Hours') }}</p>
             </div>
         </div>
+    </div>
+</div>
 
-        <div class="col-lg-2 col-md-4 mb-4">
+
+        {{-- <div class="col-lg-2 col-md-4 mb-4">
             <div class="card border-0 shadow-sm">
                 <div class="card-body text-center">
                     <div class="avtar bg-info bg-opacity-10 mx-auto mb-3">
@@ -143,8 +145,8 @@
                     <p class="text-muted mb-0">{{ __('Total Amount') }}</p>
                 </div>
             </div>
-        </div>
-    </div>
+        </div> --}}
+    {{-- </div> --}}
 
     <!-- All Services List -->
     <div class="row">
@@ -167,7 +169,7 @@
                                         <th>{{ __('Service') }}</th>
                                         <th>{{ __('Status') }}</th>
                                         <th>{{ __('Hours') }}</th>
-                                        <th>{{ __('Amount') }}</th>
+                                        {{-- <th>{{ __('Amount') }}</th> --}}
                                         <th>{{ __('Actions') }}</th>
                                     </tr>
                                 </thead>
@@ -202,11 +204,11 @@
                                                     {{ number_format($service->hours_worked ?? 0, 1) }}h
                                                 </span>
                                             </td>
-                                            <td>
+                                            {{-- <td>
                                                 <span class="text-info">
                                                     ${{ number_format($service->amount ?? 0, 2) }}
                                                 </span>
-                                            </td>
+                                            </td> --}}
                                             <td>
                                                 <a href="#" class="btn btn-outline-primary btn-sm customModal" 
                                                    data-size="lg" data-title="{{ __('View Service Details') }}" 

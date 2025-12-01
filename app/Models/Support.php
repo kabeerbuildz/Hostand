@@ -52,5 +52,10 @@ class Support extends Model
     {
         return $this->hasMany('App\Models\SupportReply', 'support_id', 'id');
     }
+
+    public function maintenanceRequest()
+    {
+        return $this->hasOne('App\Models\MaintenanceRequest', 'id', 'request_id');
+    }
     
 }

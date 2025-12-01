@@ -21,7 +21,7 @@
         }
     </style>
 
-    <div class="row">
+    <div class="row mt-3">
         <div class="col-sm-12">
             <div class="card table-card">
                 <div class="card-header">

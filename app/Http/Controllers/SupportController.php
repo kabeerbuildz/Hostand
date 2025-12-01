@@ -106,24 +106,28 @@ class SupportController extends Controller
         
         if ($user->type == 'super admin' || $user->type == 'admin') {
             // Admin can see all tickets
-            $supports = Support::with(['createdUser', 'assignUser'])->orderBy('created_at', 'desc')->get();
+            $supports = Support::with(['createdUser', 'assignUser', 'maintenanceRequest.properties', 'maintenanceRequest.types'])->orderBy('created_at', 'desc')->get();
         } elseif ($user->type == 'owner' || $user->type == 'tenant') {
             // Owners and tenants can only see their own tickets
             $supports = Support::where('created_id', $user->id)
-                ->with(['createdUser', 'assignUser'])
+                ->with(['createdUser', 'assignUser', 'maintenanceRequest.properties', 'maintenanceRequest.types'])
                 ->orderBy('created_at', 'desc')
                 ->get();
+
+            // dd($supports);
+
+                
         } elseif ($user->type == 'maintainer') {
             $requestIds = MaintenanceRequest::where('maintainer_id', $user->id)->pluck('id');
         
             $supports = Support::whereIn('request_id', $requestIds)
-                ->with(['createdUser', 'assignUser'])
+                ->with(['createdUser', 'assignUser', 'maintenanceRequest.properties', 'maintenanceRequest.types'])
                 ->orderBy('created_at', 'desc')
                 ->get();
         }else {
             // Maintainers can see tickets assigned to them
             $supports = Support::where('assign_user', $user->id)
-                ->with(['createdUser', 'assignUser'])
+                ->with(['createdUser', 'assignUser', 'maintenanceRequest.properties', 'maintenanceRequest.types'])
                 ->orderBy('created_at', 'desc')
                 ->get();
         }
@@ -146,19 +150,14 @@ class SupportController extends Controller
         // Get admin users for assignment
         $admins = User::whereIn('type', ['super admin', 'admin'])->get();
     
-        // Requests only for today's date (using request ID)
+        // Requests only for today's date (using arrival_time)
         $requests = MaintenanceRequest::with('properties','types')
             // ->where('parent_id', parentId())
-            ->whereDate('request_date', now()->toDateString())
-            ->select('id', 'request_date', 'service_type', 'property_id') 
+            ->whereRaw("DATE(arrival_time) = ?", [now()->toDateString()])
+            ->select('id', 'arrival_time', 'service_type', 'property_id') 
             ->get();
 
-        Log::info('🔍 Support Create Data Dump', [
-    'priority' => $priority,
-    'status'   => $status,
-    'admins'   => $admins,
-    'requests' => $requests,
-]);
+        
 
     
         return view('support.create', compact('priority', 'status', 'admins', 'requests'));
@@ -232,7 +231,7 @@ class SupportController extends Controller
 
     public function show($id)
     {
-        $support = Support::with(['createdUser', 'assignUser', 'reply.user'])->findOrFail($id);
+        $support = Support::with(['createdUser', 'assignUser', 'reply.user', 'maintenanceRequest.properties', 'maintenanceRequest.types'])->findOrFail($id);
         
         // Check if user has access to this ticket
         if(Auth::user()->type !== 'maintainer'){

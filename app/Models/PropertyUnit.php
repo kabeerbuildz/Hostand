@@ -11,6 +11,7 @@ class PropertyUnit extends Model
     protected $fillable = [
         'name',
         'bedroom',
+        'bedroom_type',
         'double_beds',
         'single_beds',
         'sofa_beds',
@@ -31,6 +32,15 @@ class PropertyUnit extends Model
         'parent_id',
         'notes',
         'access_description',
+        'description',
+        'piano',
+        'staircase',
+        'sign_detail',
+        'opening_type',
+        'street_code',
+        'door_code',
+        'key_description',
+        'access_other',
     ];
 
     public static $Types=[

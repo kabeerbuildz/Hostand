@@ -135,6 +135,30 @@
                         <p class="mb-0 fw-bold">{{dateFormat($support->updated_at)}}</p>
                     </div>
                     
+                    @if(!empty($support->maintenanceRequest))
+                        <div class="mb-4">
+                            <label class="form-label fw-medium text-muted small">{{ __('Property') }}</label>
+                            <p class="mb-0 fw-bold">
+                                @if(!empty($support->maintenanceRequest->properties))
+                                    {{ $support->maintenanceRequest->properties->name }}
+                                @else
+                                    -
+                                @endif
+                            </p>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-medium text-muted small">{{ __('Service Type') }}</label>
+                            <p class="mb-0 fw-bold">
+                                @if(!empty($support->maintenanceRequest->types))
+                                    {{ $support->maintenanceRequest->types->title }}
+                                @else
+                                    -
+                                @endif
+                            </p>
+                        </div>
+                    @endif
+                    
                     <hr class="my-4">
                     
                     @php

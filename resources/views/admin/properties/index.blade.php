@@ -173,13 +173,7 @@
                                     <div class="d-flex align-items-center justify-content-between mt-3">
                                         <span class="badge bg-light-secondary" data-bs-toggle="tooltip"
                                             data-bs-original-title="{{ __('Type') }}">
-                                            {{ __(\App\Models\Property::$Type[$property->type]) }} 
-
-                                            {{-- @if ($property->parent_id == Auth::id()) --}}
-                                                {{-- 'Own Property' --}}
-                                            {{-- @else
-                                                - {{ $property->owner->name ?? 'Unknown Owner' }}
-                                            @endif --}}
+                                            {{ $property->locationType->title ?? 'Unknown' }}
                                         </span>
 
 

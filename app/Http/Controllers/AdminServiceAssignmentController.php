@@ -103,7 +103,7 @@ class AdminServiceAssignmentController extends Controller
 
         $maintenanceRequest->update([
             'maintainer_id' => $request->maintainer_id,
-            'request_date' => $request->assigned_date,
+            'arrival_time' => $request->assigned_date,
             'status' => 'in_progress',
             'admin_notes' => $request->notes,
             'assigned_at' => now(),
@@ -137,7 +137,7 @@ class AdminServiceAssignmentController extends Controller
 
         $maintenanceRequest->update([
             'maintainer_id' => $request->new_maintainer_id,
-            'request_date' => $request->new_date,
+            'arrival_time' => $request->new_date,
             'admin_notes' => $request->notes,
             'reassigned_at' => now(),
             'reassigned_by' => Auth::id()

@@ -73,6 +73,10 @@ class Property extends Model
         return $this->belongsTo('App\Models\User','user_id','id');
     }
 
+    public function locationType(){
+        return $this->belongsTo('App\Models\Type','location_type','id');
+    }
+
     public function scopeForUser($query, $user)
     {
         if ($user->type === 'super admin') {

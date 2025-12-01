@@ -279,6 +279,10 @@
                                         <a class="pc-link"
                                             href="{{ route('maintenance-request.inprogress') }}">{{ __('In Progress') }}</a>
                                     </li>
+                                    <li class="pc-item {{ in_array($routeName, ['maintenance-request.completed']) ? 'active' : '' }}">
+                                        <a class="pc-link" href="{{ route('maintenance-request.completed') }}">{{ __('Completed') }}</a>
+                                    </li>
+
                                 @endif
                             </ul>
                         </li>

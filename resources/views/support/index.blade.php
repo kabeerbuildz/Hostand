@@ -43,6 +43,7 @@
                             <th>{{__('Assigned To')}}</th>
                             <th>{{__('Created Date')}}</th>
                             <th>{{__('Created By')}}</th>
+                            <th>{{__('Service')}}</th>
                             <th>{{__('Priority')}}</th>
                             <th>{{__('Status')}}</th>
                             <th class="text-right">{{__('Action')}}</th>
@@ -63,6 +64,20 @@
                                 </td>
                                 <td>
                                     {{ !empty($support->createdUser)?$support->createdUser->name:'-' }}
+                                </td>
+                                <td>
+                                    @if(!empty($support->maintenanceRequest))
+                                        @php
+                                            $propertyName = !empty($support->maintenanceRequest->properties) ? $support->maintenanceRequest->properties->name : '-';
+                                            $serviceType = !empty($support->maintenanceRequest->types) ? $support->maintenanceRequest->types->title : '-';
+                                        @endphp
+                                        {{ $propertyName }}
+                                        @if($serviceType != '-')
+                                            <br><small class="text-muted">{{ $serviceType }}</small>
+                                        @endif
+                                    @else
+                                        -
+                                    @endif
                                 </td>
                                 <td>
                                     @if($support->priority=='low')

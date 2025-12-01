@@ -41,7 +41,7 @@
 
         <div class="col-6">
             <p class="mb-1 mt-2">
-                <b>{{ __('Arrival Date/Time') }} :</b> {{ $arrivalTime }}
+                <b>{{ __('Service Date/Time') }} :</b> {{ $arrivalTime }}
             </p>
         </div>
 
@@ -54,11 +54,17 @@
             </div>
 
             {{-- Request Date --}}
-            <div class="col-6">
-                <p class="mb-1 mt-2"><b>{{ __('Request Date') }} :</b>
-                    {{ dateFormat($maintenanceRequest->request_date) }}
-                </p>
-            </div>
+<div class="col-6">
+    <p class="mb-1 mt-2"><b>{{ __('Request Date') }} :</b>
+        @php
+            $date = \Carbon\Carbon::parse($maintenanceRequest->request_date);
+        @endphp
+        {{ $date->format('M d, Y') }}
+        @if(!$date->isMidnight())
+            {{ $date->format(' h:i A') }}
+        @endif
+    </p>
+</div>
 
             {{-- Status --}}
             <div class="col-6">

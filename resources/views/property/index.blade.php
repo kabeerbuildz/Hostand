@@ -196,10 +196,10 @@
                                     {{ Str::limit($property->description, 200) }}
                                 </p>
 
-                                <div class="d-flex align-items-center justify-content-between mt-3">
+                                 <div class="d-flex align-items-center justify-content-between mt-3">
                                     <span class="badge bg-light-secondary" data-bs-toggle="tooltip"
-                                          title="{{ __('Type') }}">{{ \App\Models\Property::$Type[$property->type] }}</span>
-                                </div>
+                                          title="{{ __('Type') }}">{{ $property->locationType->title ?? 'Unknown' }}</span>
+                                </div> 
                             </div>
                         </div>
                     </div>

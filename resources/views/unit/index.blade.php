@@ -54,7 +54,7 @@
                                         <td>{{ $unit->id }}</td>
                                         <td>{{ $unit->name }}</td>
                                         {{-- <td>{{ $unit->bedroom }}</td> --}}
-                                        <td>{{ $unit->properties ? $unit->properties->type : '-' }}</td>
+                                        <td>{{ $unit->properties && $unit->properties->locationType ? $unit->properties->locationType->title : '-' }}</td>
 
                                         <td>
                                             {{ $unit->double_beds + $unit->single_beds + $unit->sofa_beds }}

@@ -35,7 +35,7 @@ class AdminPropertyController extends Controller
         }
 
         // Get all properties across all organizations with owner information
-        $properties = Property::with(['thumbnail', 'propertyImages', 'totalUnits', 'maintenanceRequests'])
+        $properties = Property::with(['thumbnail', 'propertyImages', 'totalUnits', 'maintenanceRequests', 'locationType'])
             ->where('is_active', 1)
             ->get();
 
@@ -54,7 +54,7 @@ class AdminPropertyController extends Controller
         }
 
         // Load all relationships and owner information
-        $property->load(['thumbnail', 'propertyImages', 'totalUnits', 'maintenanceRequests.units', 'maintenanceRequests.types', 'maintenanceRequests.maintainers']);
+        $property->load(['thumbnail', 'propertyImages', 'totalUnits', 'maintenanceRequests.units', 'maintenanceRequests.types', 'maintenanceRequests.maintainers', 'locationType']);
         $property->owner = User::find($property->parent_id);
         
         // Get units for this property
@@ -69,29 +69,84 @@ class AdminPropertyController extends Controller
         return view('admin.properties.show', compact('property', 'units', 'maintenanceRequests'));
     }
 
-    public function allServices()
+    // public function allServices()
+    // {
+    //     if (\Auth::user()->type !== 'super admin') {
+    //         return redirect()->back()->with('error', __('Permission Denied! Admin access required.'));
+    //     }
+
+    //     // Get all maintenance requests across all properties
+    //     $maintenanceRequests = MaintenanceRequest::with(['properties', 'units', 'types', 'maintainers'])
+    //         ->orderBy('request_date', 'desc')
+    //         ->get();
+
+    //     // Add owner information to each request
+    //     $maintenanceRequests->each(function ($request) {
+    //         if ($request->properties) {
+    //             $request->properties->owner = User::find($request->properties->parent_id);
+    //         }
+    //     });
+
+    //     // Get all service types for filter dropdown
+    //     $serviceTypes = Type::where('type','issue')->get();
+
+
+    //     // dd($maintenanceRequests);
+
+    //     return view('admin.properties.services', compact('maintenanceRequests', 'serviceTypes'));
+    // }
+
+    public function allServices(Request $request)
     {
         if (\Auth::user()->type !== 'super admin') {
             return redirect()->back()->with('error', __('Permission Denied! Admin access required.'));
         }
 
-        // Get all maintenance requests across all properties
-        $maintenanceRequests = MaintenanceRequest::with(['properties', 'units', 'types', 'maintainers'])
-            ->orderBy('request_date', 'desc')
-            ->get();
+        // Base query
+        $query = MaintenanceRequest::query();
 
-        // Add owner information to each request
+        // ---- FILTER BY PROPERTY ----
+        if ($request->property_id) {
+            $query->where('property_id', $request->property_id);
+        }
+
+        // ---- FILTER BY OWNER ----
+        if ($request->owner_id) {
+            $query->whereHas('properties', function($q) use ($request) {
+                $q->where('parent_id', $request->owner_id);
+            });
+        }
+
+        // Load relations
+        $maintenanceRequests = $query->with([
+            'properties', 
+            'units', 
+            'types', 
+            'maintainers',
+            'properties.owner'
+        ])
+        ->orderBy('request_date', 'desc')
+        ->get();
         $maintenanceRequests->each(function ($request) {
             if ($request->properties) {
                 $request->properties->owner = User::find($request->properties->parent_id);
             }
         });
 
-        // Get all service types for filter dropdown
-        $serviceTypes = Type::where('type','issue')->get();
+        // ---- LOAD DATA FOR FILTER DROPDOWNS ----
+        $properties = Property::all();            // List for property filter
+        $owners = User::where('type', 'owner')->get();  // List for owner filter
+        
 
-        return view('admin.properties.services', compact('maintenanceRequests', 'serviceTypes'));
+        // Service types (optional)
+        $serviceTypes = Type::where('type', 'issue')->get();
+
+        return view(
+            'admin.properties.services', 
+            compact('maintenanceRequests', 'serviceTypes', 'properties', 'owners')
+        );
     }
+
 
     public function analytics()
     {

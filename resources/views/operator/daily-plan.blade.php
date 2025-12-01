@@ -260,8 +260,16 @@
                                     </p>
                                     
                                     @if($service->hours_worked)
-                                        <p class="mb-2">dasd
-                                            <strong>{{ __('Hours Worked:') }}</strong> {{ number_format($service->hours_worked, 1) }}h
+                                        <p class="mb-2">
+                                            <strong>{{ __('Hours Worked:') }}</strong> 
+                                            @if($service->hours_worked < 1)
+                                                @php
+                                                    $minutes = round($service->hours_worked * 60);
+                                                @endphp
+                                                {{ $minutes }} {{ __('min') }}
+                                            @else
+                                                {{ number_format($service->hours_worked, 1) }}h
+                                            @endif
                                         </p>
                                     @endif
                                     

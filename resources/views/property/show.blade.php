@@ -66,13 +66,13 @@
                                 {{ __('Property Units') }}
                             </a>
                         </li>
-                        {{-- <li class="nav-item">
+                        <li class="nav-item">
                             <a class="nav-link" id="profile-tab-3" data-bs-toggle="tab" href="#profile-3" role="tab"
                                 aria-selected="false">
                                 <i class="material-icons-two-tone me-2">vpn_key</i>
                                 {{ __('Access & Settings') }}
                             </a>
-                        </li> --}}
+                        </li>
                         <li class="nav-item">
                             <a class="nav-link" id="profile-tab-4" data-bs-toggle="tab" href="#profile-4" role="tab"
                                 aria-selected="false">
@@ -140,9 +140,11 @@
                                                                 {{ ucfirst($property->name) }}
 
                                                             </h3>
+                                                            @if($property->type && isset(\App\Models\Property::$Type[$property->type]))
                                                             <span class="badge bg-light-primary f-14 mt-1"
                                                                 data-bs-toggle="tooltip"
                                                                 data-bs-original-title="{{ __('Type') }}">{{ \App\Models\Property::$Type[$property->type] }}</span>
+                                                            @endif
                                                             <h5 class="mt-4">{{ __('Property Details') }}</h5>
                                                             <hr class="my-3" />
                                                             <p class="text-muted">
@@ -204,8 +206,22 @@
                                     <div class="col-xxl-3 col-xl-4 col-md-6">
                                         <div class="card follower-card">
                                             <div class="card-body p-3">
+                                                @php
+                                                    $locationTypeTitle = $property->locationType->title ?? '';
+                                                    $locationTypeLower = strtolower($locationTypeTitle);
+                                                    $isHolidayHome = str_contains($locationTypeLower, 'casa vacanze') || str_contains($locationTypeLower, 'holiday home');
+                                                    $isBnbHotel = str_contains($locationTypeLower, 'affittacamere') || str_contains($locationTypeLower, 'bnb') || 
+                                                                  str_contains($locationTypeLower, 'guesthouse') || str_contains($locationTypeLower, 'hotel');
+                                                    $nameLabel = 'Name';
+                                                    if ($isHolidayHome) {
+                                                        $nameLabel = 'Structure Name';
+                                                    } elseif ($isBnbHotel) {
+                                                        $nameLabel = 'Room Name';
+                                                    }
+                                                @endphp
                                                 <div class="d-flex align-items-start mb-3">
                                                     <div class="flex-grow-1 ">
+                                                        <small class="text-muted d-block mb-1">{{ $nameLabel }}</small>
                                                         <h2 class="mb-1 text-truncate">{{ ucfirst($unit->name) }}</h2>
                                                     </div>
                                                     <div class="flex-shrink-0">
@@ -245,80 +261,133 @@
                                                 </div>
                                                 <hr class="my-3" />
 
-
                                                 <div class="row">
-                                                    <p class="mb-1">{{ __('Bedroom') }} :
-                                                        <span class="text-muted">{{ $unit->bedroom }}</span>
-                                                    </p>
-                                                    <p class="mb-1">{{ __('Kitchen') }} :
-                                                        <span class="text-muted">{{ $unit->kitchen }}</span>
-                                                    </p>
-                                                    <p class="mb-1">{{ __('Bath') }} :
-                                                        <span class="text-muted">{{ $unit->baths }}</span>
-                                                    </p>
-                                                    <p class="mb-1">{{ __('Opening Type') }} :
-                                                        <span class="text-muted">{{ $unit->opening_type }}</span>
-                                                    </p>
-                                                    <p class="mb-1">{{ __('Street Code') }} :
-                                                        <span class="text-muted">{{ $unit->street_code }}</span>
-                                                    </p>
-                                                    <p class="mb-1">{{ __('Door code') }} :
-                                                        <span class="text-muted">{{ $unit->street_code }}</span>
-                                                    </p>
-                                                    <p class="mb-1">{{ __('Access Code') }} :
-                                                        <span class="text-muted">{{ $unit->access_other }}</span>
-                                                    </p>
-                                                    <!--<p class="mb-1">{{ __('Rent Type') }} :-->
-                                                    <!--    <span class="text-muted">{{ $unit->rent_type }}</span>-->
-                                                    <!--</p>-->
-                                                    <!--<p class="mb-1">{{ __('Rent') }} :-->
-                                                    <!--    <span class="text-muted">{{ priceFormat($unit->rent) }}</span>-->
-                                                    <!--</p>-->
+                                                    {{-- Bedroom Type (for BNB/HOTEL only) --}}
+                                                    @if($isBnbHotel && $unit->bedroom_type)
+                                                        <p class="mb-1">{{ __('Bedroom Type') }} :
+                                                            <span class="text-muted">{{ ucfirst($unit->bedroom_type) }}</span>
+                                                        </p>
+                                                    @endif
 
-                                                    <!--@if ($unit->rent_type == 'custom')
-    -->
-                                                    <!--    <p class="mb-1">{{ __('Start Date') }} :-->
-                                                    <!--        <span class="text-muted">{{ $unit->start_date }}</span>-->
-                                                    <!--    </p>-->
-                                                    <!--    <p class="mb-1">{{ __('End Date') }} :-->
-                                                    <!--        <span class="text-muted">{{ $unit->end_date }}</span>-->
-                                                    <!--    </p>-->
-                                                    <!--    <p class="mb-1">{{ __('Payment Due Date') }} :-->
-                                                    <!--        <span class="text-muted">{{ $unit->payment_due_date }}</span>-->
-                                                    <!--    </p>-->
-                                                <!--@else-->
-                                                    <!--    <p class="mb-1">{{ __('Rent Duration') }} :-->
-                                                    <!--        <span class="text-muted">{{ $unit->rent_duration }}</span>-->
-                                                    <!--    </p>-->
-                                                    <!--
-    @endif-->
+                                                    {{-- Bedroom (hidden for BNB/HOTEL) --}}
+                                                    @if(!$isBnbHotel && $unit->bedroom)
+                                                        <p class="mb-1">{{ __('Bedroom') }} :
+                                                            <span class="text-muted">{{ $unit->bedroom }}</span>
+                                                        </p>
+                                                    @endif
 
-                                                    <!--<p class="mb-1">{{ __('Deposit Type') }} :-->
-                                                    <!--    <span class="text-muted">{{ $unit->deposit_type }}</span>-->
-                                                    <!--</p>-->
-                                                    <!--<p class="mb-1">{{ __('Deposit Amount') }} :-->
-                                                    <!--    <span class="text-muted">-->
-                                                    <!--        {{ $unit->deposit_type == 'fixed' ? priceFormat($unit->deposit_amount) : $unit->deposit_amount . '%' }}-->
-                                                    <!--    </span>-->
-                                                    <!--</p>-->
-                                                    <!--<p class="mb-1">{{ __('Late Fee Type') }} :-->
-                                                    <!--    <span class="text-muted">{{ $unit->late_fee_type }}</span>-->
-                                                    <!--</p>-->
-                                                    <!--<p class="mb-1">{{ __('Late Fee Amount') }} :-->
-                                                    <!--    <span class="text-muted">-->
-                                                    <!--        {{ $unit->late_fee_type == 'fixed' ? priceFormat($unit->late_fee_amount) : $unit->late_fee_amount . '%' }}-->
-                                                    <!--    </span>-->
-                                                    <!--</p>-->
-                                                    <!--<p class="mb-1">{{ __('Incident Receipt Amount') }} :-->
-                                                    <!--    <span-->
-                                                    <!--        class="text-muted">{{ priceFormat($unit->incident_receipt_amount) }}</span>-->
-                                                    <!--</p>-->
+                                                    {{-- Double Beds --}}
+                                                    @if($unit->double_beds)
+                                                        <p class="mb-1">{{ __('Double Beds') }} :
+                                                            <span class="text-muted">{{ $unit->double_beds }}</span>
+                                                        </p>
+                                                    @endif
+
+                                                    {{-- Single Beds --}}
+                                                    @if($unit->single_beds)
+                                                        <p class="mb-1">{{ __('Single Beds') }} :
+                                                            <span class="text-muted">{{ $unit->single_beds }}</span>
+                                                        </p>
+                                                    @endif
+
+                                                    {{-- Sofa Beds --}}
+                                                    @if($unit->sofa_beds)
+                                                        <p class="mb-1">{{ __('Sofa Beds') }} :
+                                                            <span class="text-muted">{{ $unit->sofa_beds }}</span>
+                                                        </p>
+                                                    @endif
+
+                                                    {{-- Kitchen (hidden for BNB/HOTEL) --}}
+                                                    @if(!$isBnbHotel && $unit->kitchen)
+                                                        <p class="mb-1">{{ __('Kitchen') }} :
+                                                            <span class="text-muted">{{ ucfirst($unit->kitchen) }}</span>
+                                                        </p>
+                                                    @endif
+
+                                                    {{-- Bath --}}
+                                                    @if($unit->baths)
+                                                        <p class="mb-1">{{ __('Bath') }} :
+                                                            <span class="text-muted">{{ $unit->baths }}</span>
+                                                        </p>
+                                                    @endif
+
+                                                    {{-- Opening Type (hidden for Holiday Home) --}}
+                                                    @if(!$isHolidayHome && $unit->opening_type)
+                                                        <p class="mb-1">{{ __('Opening Type') }} :
+                                                            <span class="text-muted">{{ ucfirst($unit->opening_type) }}</span>
+                                                        </p>
+                                                    @endif
+
+                                                    {{-- Floor (hidden for Holiday Home) --}}
+                                                    @if(!$isHolidayHome && $unit->piano)
+                                                        <p class="mb-1">{{ __('Floor') }} :
+                                                            <span class="text-muted">{{ $unit->piano }}</span>
+                                                        </p>
+                                                    @endif
+
+                                                    {{-- Staircase (hidden for Holiday Home and BNB/HOTEL) --}}
+                                                    @if(!$isHolidayHome && !$isBnbHotel && $unit->staircase)
+                                                        <p class="mb-1">{{ __('Staircase') }} :
+                                                            <span class="text-muted">{{ $unit->staircase }}</span>
+                                                        </p>
+                                                    @endif
+
+                                                    {{-- Access Description (hidden for Holiday Home) --}}
+                                                    @if(!$isHolidayHome && $unit->access_description)
+                                                        <p class="mb-1">{{ __('Access Description') }} :
+                                                            <span class="text-muted">{{ Str::limit($unit->access_description, 50) }}</span>
+                                                        </p>
+                                                    @endif
+
+                                                    {{-- Street Code (only if opening_type is code) --}}
+                                                    @if($unit->opening_type === 'code' && $unit->street_code)
+                                                        <p class="mb-1">{{ __('Street Code') }} :
+                                                            <span class="text-muted">{{ $unit->street_code }}</span>
+                                                        </p>
+                                                    @endif
+
+                                                    {{-- Door Code (only if opening_type is code) --}}
+                                                    @if($unit->opening_type === 'code' && $unit->door_code)
+                                                        <p class="mb-1">{{ __('Door Code') }} :
+                                                            <span class="text-muted">{{ $unit->door_code }}</span>
+                                                        </p>
+                                                    @endif
+
+                                                    {{-- Key Description (only if opening_type is code) --}}
+                                                    @if($unit->opening_type === 'code' && $unit->key_description)
+                                                        <p class="mb-1">{{ __('Key Description') }} :
+                                                            <span class="text-muted">{{ Str::limit($unit->key_description, 50) }}</span>
+                                                        </p>
+                                                    @endif
+
+                                                    {{-- Access Other (only if opening_type is code) --}}
+                                                    @if($unit->opening_type === 'code' && $unit->access_other)
+                                                        <p class="mb-1">{{ __('Other Access Information') }} :
+                                                            <span class="text-muted">{{ Str::limit($unit->access_other, 50) }}</span>
+                                                        </p>
+                                                    @endif
+
+                                                    {{-- Sign Detail (hidden for Holiday Home and BNB/HOTEL) --}}
+                                                    @if(!$isHolidayHome && !$isBnbHotel && $unit->sign_detail)
+                                                        <p class="mb-1">{{ __('Sign/Identifying Detail') }} :
+                                                            <span class="text-muted">{{ $unit->sign_detail }}</span>
+                                                        </p>
+                                                    @endif
+
+                                                    {{-- Description (hidden for BNB/HOTEL) --}}
+                                                    @if(!$isBnbHotel && $unit->description)
+                                                        <p class="mb-1">{{ __('Description') }} :
+                                                            <span class="text-muted">{{ Str::limit($unit->description, 50) }}</span>
+                                                        </p>
+                                                    @endif
                                                 </div>
 
                                                 <hr class="my-2" />
-                                                <p class="my-3 text-muted text-sm">
-                                                    {{ $unit->notes }}
-                                                </p>
+                                                @if($unit->notes)
+                                                    <p class="my-3 text-muted text-sm">
+                                                        <strong>{{ __('Notes') }}:</strong> {{ $unit->notes }}
+                                                    </p>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>
@@ -327,7 +396,7 @@
                         </div>
 
                         <!-- Access & Settings Tab -->
-                        {{-- <div class="tab-pane" id="profile-3" role="tabpanel" aria-labelledby="profile-tab-3">
+                        <div class="tab-pane" id="profile-3" role="tabpanel" aria-labelledby="profile-tab-3">
                             <div class="row">
                                 <div class="col-sm-12">
                                     <div class="card border">
@@ -336,7 +405,7 @@
                                         </div>
                                         <div class="card-body">
                                             <div class="row">
-                                                
+                                                <!-- Access Codes Section -->
                                                 <div class="col-md-6">
                                                     <h6 class="text-primary mb-3">{{ __('Access Codes') }}</h6>
                                                     <div class="mb-3">
@@ -365,7 +434,7 @@
                                                     </div>
                                                 </div>
 
-                                                
+                                                <!-- Property Settings Section -->
                                                 <div class="col-md-6">
                                                     <h6 class="text-primary mb-3">{{ __('Property Settings') }}</h6>
                                                     <div class="mb-3">
@@ -416,8 +485,7 @@
                                     </div>
                                 </div>
                             </div>
-                        </div> --}}
-
+                        </div>
                         <!-- Services & Requests Tab -->
                         <div class="tab-pane" id="profile-4" role="tabpanel" aria-labelledby="profile-tab-4">
                             <div class="row">
